@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TELECEL — Comissões</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/app.css" />
+</head>
+<body>
+  <div id="page">
+    <div class="page-head">
+      <div>
+        <h1>Comissões</h1>
+        <p>Acompanhe as comissões dos vendedores.</p>
+      </div>
+      <div class="head-actions">
+        <button class="btn btn-sm">Período: Este mês ▾</button>
+      </div>
+    </div>
+
+    <div class="kpi-grid" style="grid-template-columns:repeat(5,1fr)">
+      <div class="kpi"><div class="kpi-label">Total de Comissões</div><div class="kpi-value" style="font-size:19px">R$ 412.850,75</div></div>
+      <div class="kpi"><div class="kpi-label">Comissões Pagas</div><div class="kpi-value" style="font-size:19px">R$ 245.750,00</div></div>
+      <div class="kpi"><div class="kpi-label">Comissões a Pagar</div><div class="kpi-value" style="font-size:19px">R$ 167.100,75</div></div>
+      <div class="kpi"><div class="kpi-label">Vendedores Ativos</div><div class="kpi-value">56</div></div>
+      <div class="kpi"><div class="kpi-label">Ticket Médio</div><div class="kpi-value" style="font-size:19px">R$ 1.985,50</div></div>
+    </div>
+
+    <div class="grid grid-3-2">
+      <div class="card">
+        <div class="card-head"><h3>Ranking de Vendedores</h3></div>
+        <div class="card-pad"><div class="rank-list" id="ranking"></div></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>Comissões por Status</h3></div>
+        <div class="card-pad">
+          <div id="statusDonut"></div>
+          <div class="chart-legend" style="padding:14px 0 0; flex-direction:column; gap:10px">
+            <span class="legend-item"><span class="legend-dot" style="background:#137a3f"></span>Pagas · 59,5%</span>
+            <span class="legend-item"><span class="legend-dot" style="background:#b7791f"></span>A Pagar · 40,5%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/js/shell.js"></script>
+  <script>
+    TC.mountShell('commissions');
+
+    const sellers = [
+      { name: 'Roberta Lima', val: 'R$ 345.750,00', pct: 100 },
+      { name: 'Amanda Silva', val: 'R$ 198.420,00', pct: 57 },
+      { name: 'Carlos Alberto', val: 'R$ 175.300,00', pct: 51 },
+      { name: 'Juliana Castro', val: 'R$ 150.250,00', pct: 43 },
+      { name: 'Felipe Souza', val: 'R$ 120.430,00', pct: 35 },
+    ];
+    document.getElementById('ranking').innerHTML = sellers.map(s => `
+      <div class="rank-row">
+        <div class="rank-av">${s.name.split(' ').map(w=>w[0]).slice(0,2).join('')}</div>
+        <div class="rank-info">
+          <div class="rank-name">${s.name}</div>
+          <div class="rank-track"><span style="width:${s.pct}%"></span></div>
+        </div>
+        <div class="rank-val">${s.val}</div>
+      </div>`).join('');
+
+    TC.donut(document.getElementById('statusDonut'), [
+      { value: 59.5, color: '#137a3f' },
+      { value: 40.5, color: '#b7791f' },
+    ], { center: { value: 'R$ 412.8K', label: 'Total' }, size: 180 });
+  </script>
+</body>
+</html>

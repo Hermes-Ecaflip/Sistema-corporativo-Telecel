@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TELECEL — Auditoria</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/app.css" />
+</head>
+<body>
+  <div id="page">
+    <div class="page-head">
+      <div>
+        <h1>Auditoria / Logs</h1>
+        <p>Logs de auditoria do sistema.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="filter-bar">
+        <div class="search-mini" id="searchBox"></div>
+        <button class="btn btn-sm" id="btnFilter"></button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Data/Hora</th><th>Usuário</th><th>Ação</th><th>Módulo</th><th>Detalhes</th><th>IP</th></tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+      <div class="pagination">
+        <span class="info">Mostrando 1 a 5 de 1.234 logs</span>
+        <div class="pages">
+          <button class="page-btn" disabled>‹</button>
+          <button class="page-btn active">1</button>
+          <button class="page-btn">2</button>
+          <button class="page-btn">3</button>
+          <button class="page-btn">…</button>
+          <button class="page-btn">247</button>
+          <button class="page-btn">›</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/js/shell.js"></script>
+  <script>
+    TC.mountShell('audit');
+    document.getElementById('btnFilter').innerHTML = tcIcon('filter') + ' Filtros';
+    document.getElementById('searchBox').innerHTML = tcIcon('search') + '<input type="text" placeholder="Buscar logs...">';
+
+    const logs = [
+      { dt: '20/05/2025 14:32:15', user: 'admin@telecel.com.br', action: 'LOGIN', mod: 'Autenticação', det: 'Usuário efetuou login com sucesso', ip: '192.168.1.10' },
+      { dt: '20/05/2025 14:30:18', user: 'supervisor@telecel.com.br', action: 'UPDATE', mod: 'Clientes', det: 'Atualizou dados do cliente João da Silva', ip: '192.168.1.20' },
+      { dt: '20/05/2025 14:25:42', user: 'vendedor@telecel.com.br', action: 'CREATE', mod: 'Vendas', det: 'Criou venda #VDA-1255', ip: '192.168.1.30' },
+      { dt: '20/05/2025 14:20:05', user: 'financeiro@telecel.com.br', action: 'UPDATE', mod: 'Financeiro', det: 'Baixa de pagamento realizada', ip: '192.168.1.50' },
+      { dt: '20/05/2025 14:15:33', user: 'auditor@telecel.com.br', action: 'EXPORT', mod: 'Relatórios', det: 'Exportou relatório financeiro', ip: '192.168.1.40' },
+    ];
+
+    const actionBadge = {
+      LOGIN: 'badge-blue', CREATE: 'badge-green', UPDATE: 'badge-amber',
+      DELETE: 'badge-red', EXPORT: 'badge-gray',
+    };
+
+    document.getElementById('rows').innerHTML = logs.map(l => `
+      <tr>
+        <td class="cell-muted">${l.dt}</td>
+        <td class="cell-strong">${l.user}</td>
+        <td><span class="badge ${actionBadge[l.action]||'badge-gray'}">${l.action}</span></td>
+        <td>${l.mod}</td>
+        <td class="cell-muted">${l.det}</td>
+        <td class="cell-muted">${l.ip}</td>
+      </tr>`).join('');
+  </script>
+</body>
+</html>

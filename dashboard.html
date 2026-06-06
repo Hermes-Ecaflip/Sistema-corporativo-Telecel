@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TELECEL — Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/app.css" />
+</head>
+<body>
+  <div id="page">
+    <div class="page-head">
+      <div>
+        <div class="greeting">Olá, Admin! 👋</div>
+        <p>Aqui está o resumo geral do sistema.</p>
+      </div>
+      <div class="head-actions">
+        <button class="btn btn-sm">Período: Este mês ▾</button>
+      </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-grid">
+      <div class="kpi">
+        <div class="kpi-top">
+          <div class="kpi-ico" id="k1"></div>
+          <div class="kpi-label">Faturamento (Mês)</div>
+        </div>
+        <div class="kpi-value">R$ 2.584.750,90</div>
+        <div class="kpi-trend up">▲ 12,3% vs mês anterior</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-top">
+          <div class="kpi-ico" id="k2"></div>
+          <div class="kpi-label">Vendas (Mês)</div>
+        </div>
+        <div class="kpi-value">1.289</div>
+        <div class="kpi-trend up">▲ 8,3% vs mês anterior</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-top">
+          <div class="kpi-ico" id="k3"></div>
+          <div class="kpi-label">Clientes Ativos</div>
+        </div>
+        <div class="kpi-value">2.456</div>
+        <div class="kpi-trend up">▲ 6,7% vs mês anterior</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-top">
+          <div class="kpi-ico" id="k4"></div>
+          <div class="kpi-label">Comissão (Mês)</div>
+        </div>
+        <div class="kpi-value">R$ 412.850,75</div>
+        <div class="kpi-trend up">▲ 9,1% vs mês anterior</div>
+      </div>
+    </div>
+
+    <!-- Gráficos -->
+    <div class="grid grid-3-2 mb">
+      <div class="card">
+        <div class="card-head">
+          <h3>Faturamento x Vendas</h3>
+          <span class="sub">Últimos 30 dias</span>
+        </div>
+        <div class="chart-box" id="chartRevenue"></div>
+        <div class="chart-legend">
+          <span class="legend-item"><span class="legend-dot" style="background:#ff5a1f"></span>Faturamento (R$)</span>
+          <span class="legend-item"><span class="legend-dot" style="background:#1d4ed8"></span>Vendas</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>Vendas por Status</h3></div>
+        <div class="card-pad">
+          <div id="statusDonut"></div>
+          <div class="chart-legend" style="padding:14px 0 0; flex-direction:column; gap:10px">
+            <span class="legend-item"><span class="legend-dot" style="background:#137a3f"></span>Concluídas · 850 (65,9%)</span>
+            <span class="legend-item"><span class="legend-dot" style="background:#b7791f"></span>Em análise · 200 (15,5%)</span>
+            <span class="legend-item"><span class="legend-dot" style="background:#1d4ed8"></span>Aprovadas · 150 (11,6%)</span>
+            <span class="legend-item"><span class="legend-dot" style="background:#cf222e"></span>Reprovadas · 89 (6,9%)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Linha inferior -->
+    <div class="grid grid-3 mb">
+      <div class="card">
+        <div class="card-head"><h3>Top Vendedores</h3></div>
+        <div class="card-pad">
+          <div class="rank-list" id="ranking"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>Alertas</h3></div>
+        <div class="card-pad" id="alerts"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>Meta da Equipe</h3></div>
+        <div class="card-pad">
+          <div class="gauge-wrap" id="metaGauge"></div>
+          <div style="text-align:center; margin-top:8px; font-size:13px; color:var(--ink-soft)">
+            <div>Meta: <strong>R$ 3.000.000,00</strong></div>
+            <div style="margin-top:4px">Alcançado: <strong style="color:var(--green)">R$ 2.550.000,00</strong></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/js/shell.js"></script>
+  <script>
+    TC.mountShell('dashboard');
+
+    // ícones dos KPIs
+    document.getElementById('k1').innerHTML = tcIcon('cash');
+    document.getElementById('k2').innerHTML = tcIcon('sales');
+    document.getElementById('k3').innerHTML = tcIcon('clients');
+    document.getElementById('k4').innerHTML = tcIcon('commissions');
+
+    // gráfico de faturamento (linha dupla)
+    const days = Array.from({length: 15}, (_, i) => String(i*2+1).padStart(2,'0'));
+    TC.lineChart(document.getElementById('chartRevenue'), [
+      { data: [42,55,48,67,72,63,80,75,88,79,92,85,98,90,105], color: '#ff5a1f' },
+      { data: [30,38,35,45,50,44,58,53,62,57,66,60,70,65,74], color: '#1d4ed8', fill: false },
+    ], { labels: days, height: 240 });
+
+    // donut de status
+    TC.donut(document.getElementById('statusDonut'), [
+      { value: 850, color: '#137a3f' },
+      { value: 200, color: '#b7791f' },
+      { value: 150, color: '#1d4ed8' },
+      { value: 89,  color: '#cf222e' },
+    ], { center: { value: '1.289', label: 'Total' }, size: 180 });
+
+    // ranking
+    const sellers = [
+      { name: 'Roberta Lima', val: 'R$ 345.750,00', pct: 100 },
+      { name: 'Amanda Silva', val: 'R$ 198.430,00', pct: 57 },
+      { name: 'Carlos Alberto', val: 'R$ 175.300,00', pct: 51 },
+    ];
+    document.getElementById('ranking').innerHTML = sellers.map((s, i) => `
+      <div class="rank-row">
+        <div class="rank-av">${s.name.split(' ').map(w=>w[0]).slice(0,2).join('')}</div>
+        <div class="rank-info">
+          <div class="rank-name">${s.name}</div>
+          <div class="rank-track"><span style="width:${s.pct}%"></span></div>
+        </div>
+        <div class="rank-val">${s.val}</div>
+      </div>`).join('');
+
+    // alertas
+    document.getElementById('alerts').innerHTML = `
+      <div class="alert-row">
+        <div class="alert-ico warn">${tcIcon('bell')}</div>
+        <div class="alert-txt"><div class="t">5 tentativas de login bloqueadas</div><div class="s">há 1h atrás</div></div>
+      </div>
+      <div class="alert-row">
+        <div class="alert-ico info">${tcIcon('doc')}</div>
+        <div class="alert-txt"><div class="t">Documentos prestes a expirar</div><div class="s">12 documentos</div></div>
+      </div>`;
+
+    // gauge da meta
+    TC.gauge(document.getElementById('metaGauge'), 85, { size: 190 });
+  </script>
+</body>
+</html>

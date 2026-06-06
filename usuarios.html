@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TELECEL — Usuários</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/app.css" />
+</head>
+<body>
+  <div id="page">
+    <div class="page-head">
+      <div>
+        <h1>Usuários</h1>
+        <p>Gerencie os usuários do sistema.</p>
+      </div>
+      <div class="head-actions">
+        <button class="btn" id="btnFilter"></button>
+        <button class="btn btn-primary" id="btnNew"></button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Usuário</th><th>E-mail</th><th>Perfil</th><th>Status</th><th>Último Acesso</th><th>Ações</th></tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+      <div class="pagination">
+        <span class="info">Mostrando 1 a 5 de 56 usuários</span>
+        <div class="pages">
+          <button class="page-btn" disabled>‹</button>
+          <button class="page-btn active">1</button>
+          <button class="page-btn">2</button>
+          <button class="page-btn">3</button>
+          <button class="page-btn">…</button>
+          <button class="page-btn">12</button>
+          <button class="page-btn">›</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/js/shell.js"></script>
+  <script>
+    TC.mountShell('users');
+    document.getElementById('btnFilter').innerHTML = tcIcon('filter') + ' Filtros';
+    document.getElementById('btnNew').innerHTML = tcIcon('plus') + ' Novo Usuário';
+
+    const users = [
+      { name: 'Admin', email: 'admin@telecel.com.br', role: 'Administrador', status: 'Ativo', last: '20/05/2025 14:32' },
+      { name: 'Supervisor', email: 'supervisor@telecel.com.br', role: 'Supervisor', status: 'Ativo', last: '20/05/2025 14:30' },
+      { name: 'Vendedor', email: 'vendedor@telecel.com.br', role: 'Vendedor', status: 'Ativo', last: '20/05/2025 14:25' },
+      { name: 'Financeiro', email: 'financeiro@telecel.com.br', role: 'Financeiro', status: 'Ativo', last: '20/05/2025 14:20' },
+      { name: 'Auditor', email: 'auditor@telecel.com.br', role: 'Auditor', status: 'Ativo', last: '20/05/2025 14:15' },
+    ];
+
+    const roleBadge = {
+      'Administrador': 'badge-red', 'Supervisor': 'badge-blue',
+      'Vendedor': 'badge-green', 'Financeiro': 'badge-amber', 'Auditor': 'badge-gray',
+    };
+
+    document.getElementById('rows').innerHTML = users.map(u => `
+      <tr>
+        <td><div style="display:flex;align-items:center;gap:10px">
+          <div class="rank-av">${u.name.slice(0,2).toUpperCase()}</div>
+          <span class="cell-strong">${u.name}</span>
+        </div></td>
+        <td class="cell-muted">${u.email}</td>
+        <td><span class="badge ${roleBadge[u.role]||'badge-gray'}">${u.role}</span></td>
+        <td><span class="badge badge-green">${u.status}</span></td>
+        <td class="cell-muted">${u.last}</td>
+        <td>
+          <div class="row-actions">
+            <button class="act" title="Editar">${tcIcon('edit')}</button>
+            <button class="act" title="Mais">${tcIcon('more')}</button>
+          </div>
+        </td>
+      </tr>`).join('');
+  </script>
+</body>
+</html>

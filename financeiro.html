@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TELECEL — Financeiro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/app.css" />
+</head>
+<body>
+  <div id="page">
+    <div class="page-head">
+      <div>
+        <h1>Financeiro</h1>
+        <p>Resumo financeiro da empresa.</p>
+      </div>
+      <div class="head-actions">
+        <button class="btn btn-sm">Este mês ▾</button>
+      </div>
+    </div>
+
+    <!-- KPIs financeiros -->
+    <div class="kpi-grid" style="grid-template-columns:repeat(5,1fr)">
+      <div class="kpi">
+        <div class="kpi-label">Receitas</div>
+        <div class="kpi-value" style="font-size:20px">R$ 2.584.750,90</div>
+        <div class="kpi-trend up">▲ 12,3%</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Despesas</div>
+        <div class="kpi-value" style="font-size:20px">R$ 1.285.450,30</div>
+        <div class="kpi-trend down">▼ 0,2%</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Lucro Líquido</div>
+        <div class="kpi-value" style="font-size:20px">R$ 1.299.300,60</div>
+        <div class="kpi-trend up">▲ 16,8%</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Contas a Receber</div>
+        <div class="kpi-value" style="font-size:20px">R$ 588.450,00</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Contas a Pagar</div>
+        <div class="kpi-value" style="font-size:20px">R$ 245.750,00</div>
+      </div>
+    </div>
+
+    <div class="grid grid-3-2">
+      <div class="card">
+        <div class="card-head"><h3>Fluxo de Caixa</h3><span class="sub">Últimos 30 dias</span></div>
+        <div class="chart-box" id="cashFlow"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>Distribuição de Receitas</h3></div>
+        <div class="card-pad">
+          <div id="revDonut"></div>
+          <div class="chart-legend" style="padding:14px 0 0; flex-direction:column; gap:10px">
+            <span class="legend-item"><span class="legend-dot" style="background:#ff5a1f"></span>Planos Pós · 45%</span>
+            <span class="legend-item"><span class="legend-dot" style="background:#1d4ed8"></span>Planos Pré · 25%</span>
+            <span class="legend-item"><span class="legend-dot" style="background:#137a3f"></span>Aparelhos · 15%</span>
+            <span class="legend-item"><span class="legend-dot" style="background:#b7791f"></span>Serviços · 10%</span>
+            <span class="legend-item"><span class="legend-dot" style="background:#8b93a4"></span>Acessórios · 5%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/js/shell.js"></script>
+  <script>
+    TC.mountShell('financial');
+
+    const days = Array.from({length: 15}, (_, i) => String(i*2+1).padStart(2,'0'));
+    TC.lineChart(document.getElementById('cashFlow'), [
+      { data: [120,135,128,150,165,155,180,172,195,185,210,200,230,225,260], color: '#ff5a1f' },
+    ], { labels: days, height: 260 });
+
+    TC.donut(document.getElementById('revDonut'), [
+      { value: 45, color: '#ff5a1f' },
+      { value: 25, color: '#1d4ed8' },
+      { value: 15, color: '#137a3f' },
+      { value: 10, color: '#b7791f' },
+      { value: 5,  color: '#8b93a4' },
+    ], { center: { value: 'R$ 2.5M', label: 'Total' }, size: 180 });
+  </script>
+</body>
+</html>

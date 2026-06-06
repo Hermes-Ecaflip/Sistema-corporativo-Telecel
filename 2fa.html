@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TELECEL System — Verificação 2FA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/2fa.css" />
+</head>
+<body>
+  <main class="auth-shell">
+    <section class="twofa-card">
+      <!-- LOGO OFICIAL TELECEL (SVG) -->
+      <div class="logo center">
+        <svg class="logo-svg" viewBox="0 0 320 230" role="img" aria-label="Grupo Telecel">
+          <g class="logo-ring">
+            <path d="M150 25 A78 78 0 1 1 72 103" fill="none" stroke="#d4d4d4" stroke-width="20" stroke-linecap="round"/>
+            <path d="M150 70 A45 45 0 1 0 195 115" fill="none" stroke="#d4d4d4" stroke-width="20" stroke-linecap="round"/>
+          </g>
+          <text x="8" y="100" class="logo-grupo">GRUPO</text>
+          <text x="2" y="170" class="logo-telecel">TELECEL</text>
+        </svg>
+      </div>
+
+      <div class="twofa-grid">
+        <!-- Coluna código -->
+        <div class="twofa-col">
+          <h1>Verificação em duas etapas</h1>
+          <p class="muted">Abra seu aplicativo autenticador (Google Authenticator, Authy, etc) e insira o código de 6 dígitos.</p>
+
+          <form id="twofa-form">
+            <div class="otp-inputs" id="otp-inputs">
+              <input type="text" inputmode="numeric" maxlength="1" class="otp-box" aria-label="dígito 1" />
+              <input type="text" inputmode="numeric" maxlength="1" class="otp-box" aria-label="dígito 2" />
+              <input type="text" inputmode="numeric" maxlength="1" class="otp-box" aria-label="dígito 3" />
+              <input type="text" inputmode="numeric" maxlength="1" class="otp-box" aria-label="dígito 4" />
+              <input type="text" inputmode="numeric" maxlength="1" class="otp-box" aria-label="dígito 5" />
+              <input type="text" inputmode="numeric" maxlength="1" class="otp-box" aria-label="dígito 6" />
+            </div>
+
+            <p class="otp-timer">O código expira em <strong id="otp-countdown">25s</strong></p>
+
+            <button type="submit" class="btn-primary" id="verify-submit">
+              <span class="btn-label">Verificar código</span>
+              <span class="spinner" hidden></span>
+            </button>
+          </form>
+
+          <a href="index.html" class="link-accent back-link">Voltar para o login</a>
+        </div>
+
+        <!-- Divisor -->
+        <div class="twofa-divider"><span>ou</span></div>
+
+        <!-- Coluna QR -->
+        <div class="twofa-col qr-col">
+          <p class="muted center">Ou escaneie o<br/>QR Code</p>
+          <div class="qr-box">
+            <svg viewBox="0 0 100 100" width="150" height="150" id="qr-svg"></svg>
+          </div>
+          <p class="muted center small">Não consegue escanear?<br/>Digite o código manualmente no seu aplicativo.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" hidden></div>
+  <script src="assets/js/2fa.js"></script>
+</body>
+</html>

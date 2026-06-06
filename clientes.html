@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TELECEL — Clientes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/app.css" />
+</head>
+<body>
+  <div id="page">
+    <div class="page-head">
+      <div>
+        <h1>Clientes</h1>
+        <p>Gerencie e visualize seus clientes.</p>
+      </div>
+      <div class="head-actions">
+        <button class="btn" id="btnExport"></button>
+        <button class="btn btn-primary" id="btnNew"></button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="filter-bar">
+        <div class="search-mini" id="searchBox"></div>
+        <button class="btn btn-sm" id="btnFilter"></button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Cliente</th><th>CPF/CNPJ</th><th>Tipo</th><th>Cidade</th>
+              <th>Score</th><th>Status</th><th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+      <div class="pagination">
+        <span class="info">Mostrando 1 a 6 de 2.456 clientes</span>
+        <div class="pages">
+          <button class="page-btn" disabled>‹</button>
+          <button class="page-btn active">1</button>
+          <button class="page-btn">2</button>
+          <button class="page-btn">3</button>
+          <button class="page-btn">…</button>
+          <button class="page-btn">410</button>
+          <button class="page-btn">›</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/js/shell.js"></script>
+  <script>
+    TC.mountShell('clients');
+
+    document.getElementById('btnExport').innerHTML = tcIcon('download') + ' Exportar';
+    document.getElementById('btnNew').innerHTML = tcIcon('plus') + ' Novo Cliente';
+    document.getElementById('btnFilter').innerHTML = tcIcon('filter') + ' Filtros';
+    document.getElementById('searchBox').innerHTML = tcIcon('search') + '<input type="text" placeholder="Buscar clientes...">';
+
+    const clients = [
+      { name: 'João da Silva', doc: '123.456.789-00', type: 'Pessoa Física', city: 'São Paulo - SP', score: 850, status: 'Ativo' },
+      { name: 'Maria Santos', doc: '987.654.321-00', type: 'Pessoa Física', city: 'Rio de Janeiro - RJ', score: 720, status: 'Ativo' },
+      { name: 'Empresa XYZ Ltda', doc: '12.345.678/0001-00', type: 'Pessoa Jurídica', city: 'Belo Horizonte - MG', score: 910, status: 'Ativo' },
+      { name: 'Carlos Almeida', doc: '456.789.123-00', type: 'Pessoa Física', city: 'Curitiba - PR', score: 680, status: 'Ativo' },
+      { name: 'Ana Pereira', doc: '654.987.321-00', type: 'Pessoa Física', city: 'Salvador - BA', score: 900, status: 'Ativo' },
+      { name: 'Tecno Company Ltda', doc: '98.765.432/0001-10', type: 'Pessoa Jurídica', city: 'Fortaleza - CE', score: 430, status: 'Risco' },
+    ];
+
+    function scoreColor(s) { return s >= 700 ? '#137a3f' : s >= 500 ? '#b7791f' : '#cf222e'; }
+    function statusBadge(s) {
+      if (s === 'Ativo') return '<span class="badge badge-green">Ativo</span>';
+      if (s === 'Risco') return '<span class="badge badge-red">Risco</span>';
+      return '<span class="badge badge-gray">'+s+'</span>';
+    }
+    function typeBadge(t) {
+      return t.includes('Jurídica')
+        ? '<span class="cell-muted">'+t+'</span>'
+        : '<span class="cell-muted">'+t+'</span>';
+    }
+
+    document.getElementById('rows').innerHTML = clients.map(c => `
+      <tr>
+        <td class="cell-strong">${c.name}</td>
+        <td class="cell-muted">${c.doc}</td>
+        <td>${typeBadge(c.type)}</td>
+        <td>${c.city}</td>
+        <td>
+          <span class="score">
+            <span class="score-bar"><span style="width:${c.score/10}%;background:${scoreColor(c.score)}"></span></span>
+            <span class="score-num" style="color:${scoreColor(c.score)}">${c.score}</span>
+          </span>
+        </td>
+        <td>${statusBadge(c.status)}</td>
+        <td>
+          <div class="row-actions">
+            <button class="act" title="Ver">${tcIcon('eye')}</button>
+            <button class="act" title="Editar">${tcIcon('edit')}</button>
+            <button class="act" title="Mais">${tcIcon('more')}</button>
+          </div>
+        </td>
+      </tr>`).join('');
+  </script>
+</body>
+</html>

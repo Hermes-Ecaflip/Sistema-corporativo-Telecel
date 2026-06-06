@@ -1,0 +1,822 @@
+// =============================================================================
+// TELECEL SYSTEM — Prisma Schema Completo
+// Banco: PostgreSQL 16
+// Funcionalidades: Multi-empresa, Multi-loja, Soft Delete, Auditoria, RBAC
+// =============================================================================
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearch", "fullTextIndex"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =============================================================================
+// ENUMS
+// =============================================================================
+
+/// Papéis de usuário no sistema (RBAC)
+enum UserRole {
+  ADMIN       // Acesso total
+  SUPERVISOR  // Gerencia equipe e vendas
+  VENDEDOR    // Registra vendas
+  FINANCEIRO  // Acesso ao módulo financeiro
+  AUDITOR     // Somente leitura
+}
+
+/// Status do usuário
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  PENDING_VERIFICATION
+}
+
+/// Tipo de pessoa
+enum PersonType {
+  PF // Pessoa Física
+  PJ // Pessoa Jurídica
+}
+
+/// Status do cliente
+enum ClientStatus {
+  ACTIVE
+  INACTIVE
+  BLOCKED
+  FRAUD_SUSPECT
+}
+
+/// Categoria do produto
+enum ProductCategory {
+  APARELHO        // Celulares e dispositivos
+  PLANO_CONTROLE  // Planos TIM Controle
+  TIM_BLACK       // Planos TIM Black
+  FIBRA           // TIM Ultra Fibra
+  SEGURO          // Seguros
+  SERVICO_ADICIONAL // Serviços adicionais
+}
+
+/// Status do produto
+enum ProductStatus {
+  ACTIVE
+  INACTIVE
+  DISCONTINUED
+}
+
+/// Status da venda
+enum SaleStatus {
+  PENDING     // Aguardando aprovação
+  APPROVED    // Aprovada
+  REJECTED    // Rejeitada
+  CANCELLED   // Cancelada
+  PROCESSING  // Em processamento
+  COMPLETED   // Concluída
+}
+
+/// Tipo de comissão
+enum CommissionType {
+  FIXED       // Valor fixo
+  PERCENTAGE  // Percentual sobre venda
+  GOAL        // Por atingimento de meta
+  CAMPAIGN    // Comissão de campanha
+}
+
+/// Status da comissão
+enum CommissionStatus {
+  PENDING   // Aguardando pagamento
+  APPROVED  // Aprovada para pagamento
+  PAID      // Paga
+  CANCELLED // Cancelada
+}
+
+/// Status do pagamento
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+/// Tipo de notificação
+enum NotificationType {
+  EMAIL
+  WHATSAPP
+  SYSTEM
+  PUSH
+}
+
+/// Status da notificação
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
+  READ
+}
+
+/// Tipo de auditoria
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
+  EXPORT
+  APPROVE
+  REJECT
+  CANCEL
+}
+
+// =============================================================================
+// EMPRESA (Multi-empresa)
+// =============================================================================
+
+/// Empresa principal (ex: TELECEL)
+
+/// Tipo de meta (Dashboard)
+enum GoalType {
+  REVENUE      // Meta de receita (R$)
+  SALES_COUNT  // Meta de quantidade de vendas
+}
+
+/// Status do fechamento financeiro
+enum FinancialCloseStatus {
+  OPEN       // Em aberto
+  CLOSED     // Fechado
+  REOPENED   // Reaberto para ajustes
+}
+
+/// Tipo de movimento financeiro manual
+enum MovementType {
+  INCOME     // Receita avulsa
+  EXPENSE    // Despesa
+}
+
+
+model Company {
+  id          String   @id @default(uuid())
+  name        String   @db.VarChar(200)
+  tradeName   String?  @map("trade_name") @db.VarChar(200)
+  cnpj        String   @unique @db.VarChar(18)
+  email       String   @db.VarChar(200)
+  phone       String?  @db.VarChar(20)
+  website     String?  @db.VarChar(200)
+
+  // Endereço
+  zipCode     String?  @map("zip_code") @db.VarChar(9)
+  street      String?  @db.VarChar(200)
+  number      String?  @db.VarChar(20)
+  complement  String?  @db.VarChar(100)
+  district    String?  @db.VarChar(100)
+  city        String?  @db.VarChar(100)
+  state       String?  @db.VarChar(2)
+
+  // Logo
+  logoUrl     String?  @map("logo_url")
+
+  // Configurações
+  settings    Json     @default("{}")
+
+  // Soft delete
+  deletedAt   DateTime? @map("deleted_at")
+
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  // Relações
+  stores      Store[]
+  users       User[]
+
+  @@map("companies")
+}
+
+// =============================================================================
+// LOJA (Multi-loja)
+// =============================================================================
+
+/// Loja / Ponto de venda
+model Store {
+  id          String   @id @default(uuid())
+  companyId   String   @map("company_id")
+  name        String   @db.VarChar(200)
+  code        String   @db.VarChar(20)      // Código interno da loja
+
+  // Endereço
+  zipCode     String?  @map("zip_code") @db.VarChar(9)
+  street      String?  @db.VarChar(200)
+  number      String?  @db.VarChar(20)
+  complement  String?  @db.VarChar(100)
+  district    String?  @db.VarChar(100)
+  city        String?  @db.VarChar(100)
+  state       String?  @db.VarChar(2)
+
+  phone       String?  @db.VarChar(20)
+  email       String?  @db.VarChar(200)
+
+  isActive    Boolean  @default(true) @map("is_active")
+
+  // Soft delete
+  deletedAt   DateTime? @map("deleted_at")
+
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  // Relações
+  company     Company   @relation(fields: [companyId], references: [id])
+  users       User[]
+  sales       Sale[]
+  goals       Goal[]
+  financialCloses    FinancialClose[]
+  financialMovements FinancialMovement[]
+
+  @@unique([companyId, code])
+  @@index([companyId])
+  @@map("stores")
+}
+
+// =============================================================================
+// USUÁRIO
+// =============================================================================
+
+/// Usuário do sistema
+model User {
+  id          String      @id @default(uuid())
+  companyId   String      @map("company_id")
+  storeId     String?     @map("store_id")
+
+  // Dados pessoais
+  name        String      @db.VarChar(200)
+  email       String      @unique @db.VarChar(200)
+  phone       String?     @db.VarChar(20)
+  cpf         String?     @unique @db.VarChar(14)
+  birthDate   DateTime?   @map("birth_date") @db.Date
+
+  // Autenticação
+  password    String      // Hash bcrypt
+  role        UserRole    @default(VENDEDOR)
+  status      UserStatus  @default(PENDING_VERIFICATION)
+
+  // 2FA
+  twoFactorEnabled  Boolean   @default(false) @map("two_factor_enabled")
+  twoFactorSecret   String?   @map("two_factor_secret")
+
+  // Refresh tokens (referência — tokens em Redis)
+  lastLoginAt       DateTime? @map("last_login_at")
+  lastLoginIp       String?   @map("last_login_ip")
+  failedLoginCount  Int       @default(0) @map("failed_login_count")
+  lockedUntil       DateTime? @map("locked_until")
+
+  // Reset de senha
+  passwordResetToken    String?   @map("password_reset_token")
+  passwordResetExpires  DateTime? @map("password_reset_expires")
+
+  // Verificação de e-mail
+  emailVerifiedAt       DateTime? @map("email_verified_at")
+  emailVerificationToken String?  @map("email_verification_token")
+
+  // Avatar
+  avatarUrl   String?   @map("avatar_url")
+
+  // Soft delete
+  deletedAt   DateTime? @map("deleted_at")
+
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  // Relações
+  company         Company       @relation(fields: [companyId], references: [id])
+  store           Store?        @relation(fields: [storeId], references: [id])
+  sales           Sale[]
+  commissions     Commission[]
+  notifications   Notification[]
+  auditLogs       AuditLog[]
+  approvedSales   Sale[]        @relation("ApprovedBy")
+  rejectedSales   Sale[]        @relation("RejectedBy")
+  goalsAssigned    Goal[]            @relation("GoalUser")
+  financialCloses  FinancialClose[]  @relation("FinancialCloseClosedBy")
+
+  @@index([companyId])
+  @@index([storeId])
+  @@index([email])
+  @@index([cpf])
+  @@index([role])
+  @@index([status])
+  @@map("users")
+}
+
+// =============================================================================
+// CLIENTE
+// =============================================================================
+
+/// Cliente da TELECEL
+model Client {
+  id          String      @id @default(uuid())
+  companyId   String      @map("company_id")
+
+  // Identificação
+  personType  PersonType  @default(PF) @map("person_type")
+  name        String      @db.VarChar(200)
+  cpf         String?     @db.VarChar(14)    // Pessoa Física
+  cnpj        String?     @db.VarChar(18)    // Pessoa Jurídica
+  rg          String?     @db.VarChar(20)
+  birthDate   DateTime?   @map("birth_date") @db.Date
+
+  // Contato
+  email       String?     @db.VarChar(200)
+  phone       String      @db.VarChar(20)
+  phone2      String?     @db.VarChar(20)
+  whatsapp    String?     @db.VarChar(20)
+
+  // Endereço
+  zipCode     String?     @map("zip_code") @db.VarChar(9)
+  street      String?     @db.VarChar(200)
+  number      String?     @db.VarChar(20)
+  complement  String?     @db.VarChar(100)
+  district    String?     @db.VarChar(100)
+  city        String?     @db.VarChar(100)
+  state       String?     @db.VarChar(2)
+
+  // Status e validação
+  status      ClientStatus @default(ACTIVE)
+  fraudScore  Int         @default(0) @map("fraud_score") // 0-100
+  observations String?    @db.Text
+
+  // TIM Line (linha do cliente)
+  timLine     String?     @map("tim_line") @db.VarChar(20)
+  iccid       String?     @db.VarChar(30)   // Número do chip
+
+  // Soft delete
+  deletedAt   DateTime?   @map("deleted_at")
+
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+
+  // Relações
+  sales       Sale[]
+  documents   Document[]
+  addresses   ClientAddress[]
+
+  @@unique([companyId, cpf])
+  @@unique([companyId, cnpj])
+  @@index([companyId])
+  @@index([cpf])
+  @@index([cnpj])
+  @@index([phone])
+  @@index([status])
+  @@index([timLine])
+  @@map("clients")
+}
+
+/// Endereço adicional do cliente
+model ClientAddress {
+  id          String    @id @default(uuid())
+  clientId    String    @map("client_id")
+  label       String    @db.VarChar(50)    // "Residencial", "Comercial"
+  zipCode     String    @map("zip_code") @db.VarChar(9)
+  street      String    @db.VarChar(200)
+  number      String    @db.VarChar(20)
+  complement  String?   @db.VarChar(100)
+  district    String    @db.VarChar(100)
+  city        String    @db.VarChar(100)
+  state       String    @db.VarChar(2)
+  isPrimary   Boolean   @default(false) @map("is_primary")
+
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  client      Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([clientId])
+  @@map("client_addresses")
+}
+
+// =============================================================================
+// PRODUTO
+// =============================================================================
+
+/// Produto / Plano TIM
+model Product {
+  id            String          @id @default(uuid())
+  companyId     String          @map("company_id")
+
+  category      ProductCategory
+  name          String          @db.VarChar(200)
+  code          String          @db.VarChar(50)     // Código TIM interno
+  description   String?         @db.Text
+  imageUrl      String?         @map("image_url")
+
+  // Preços
+  price         Decimal         @db.Decimal(10, 2)
+  priceInstall  Decimal?        @map("price_install") @db.Decimal(10, 2) // Valor de instalação
+  installments  Int             @default(1)         // Parcelas
+
+  // Comissão base
+  commissionValue      Decimal? @map("commission_value") @db.Decimal(10, 2)
+  commissionPercentage Decimal? @map("commission_percentage") @db.Decimal(5, 2)
+
+  // Fibra
+  downloadSpeed Int?            @map("download_speed") // Mbps
+  uploadSpeed   Int?            @map("upload_speed")   // Mbps
+
+  // Plano móvel
+  dataLimit     Int?            @map("data_limit")     // GB
+  minutes       Int?                                   // Minutos inclusos
+  sms           Int?                                   // SMS inclusos
+
+  status        ProductStatus   @default(ACTIVE)
+  featured      Boolean         @default(false)
+  sortOrder     Int             @default(0) @map("sort_order")
+
+  // Soft delete
+  deletedAt     DateTime?       @map("deleted_at")
+
+  createdAt     DateTime        @default(now()) @map("created_at")
+  updatedAt     DateTime        @updatedAt @map("updated_at")
+
+  // Relações
+  saleItems     SaleItem[]
+  commissionRules CommissionRule[]
+
+  @@unique([companyId, code])
+  @@index([companyId])
+  @@index([category])
+  @@index([status])
+  @@map("products")
+}
+
+// =============================================================================
+// VENDA
+// =============================================================================
+
+/// Venda registrada pelo vendedor
+model Sale {
+  id              String      @id @default(uuid())
+  companyId       String      @map("company_id")
+  storeId         String      @map("store_id")
+  sellerId        String      @map("seller_id")      // Vendedor
+  clientId        String      @map("client_id")
+
+  // Numeração
+  saleNumber      String      @unique @map("sale_number") @db.VarChar(20) // Ex: TLC-2024-00001
+
+  status          SaleStatus  @default(PENDING)
+
+  // Valores
+  totalAmount     Decimal     @map("total_amount") @db.Decimal(10, 2)
+  discount        Decimal     @default(0) @db.Decimal(10, 2)
+  netAmount       Decimal     @map("net_amount") @db.Decimal(10, 2)
+
+  // TIM
+  timOrderId      String?     @map("tim_order_id")    // ID do pedido na TIM
+  iccid           String?     @db.VarChar(30)         // Número do chip (portabilidade)
+  portability     Boolean     @default(false)          // É portabilidade?
+  portabilityNumber String?   @map("portability_number") @db.VarChar(20)
+
+  // Aprovação / Rejeição
+  approvedById    String?     @map("approved_by_id")
+  approvedAt      DateTime?   @map("approved_at")
+  rejectedById    String?     @map("rejected_by_id")
+  rejectedAt      DateTime?   @map("rejected_at")
+  rejectionReason String?     @map("rejection_reason") @db.Text
+
+  // Cancelamento
+  cancelledAt     DateTime?   @map("cancelled_at")
+  cancellationReason String?  @map("cancellation_reason") @db.Text
+
+  // Validações
+  cpfValidated    Boolean     @default(false) @map("cpf_validated")
+  fraudChecked    Boolean     @default(false) @map("fraud_checked")
+  duplicateChecked Boolean    @default(false) @map("duplicate_checked")
+
+  observations    String?     @db.Text
+
+  // Soft delete
+  deletedAt       DateTime?   @map("deleted_at")
+
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+
+  // Relações
+  seller          User        @relation(fields: [sellerId], references: [id])
+  client          Client      @relation(fields: [clientId], references: [id])
+  store           Store       @relation(fields: [storeId], references: [id])
+  approvedBy      User?       @relation("ApprovedBy", fields: [approvedById], references: [id])
+  rejectedBy      User?       @relation("RejectedBy", fields: [rejectedById], references: [id])
+  items           SaleItem[]
+  documents       Document[]
+  commissions     Commission[]
+
+  @@index([companyId])
+  @@index([storeId])
+  @@index([sellerId])
+  @@index([clientId])
+  @@index([status])
+  @@index([saleNumber])
+  @@index([createdAt])
+  @@map("sales")
+}
+
+/// Item de venda (produto + quantidade)
+model SaleItem {
+  id          String    @id @default(uuid())
+  saleId      String    @map("sale_id")
+  productId   String    @map("product_id")
+  quantity    Int       @default(1)
+  unitPrice   Decimal   @map("unit_price") @db.Decimal(10, 2)
+  discount    Decimal   @default(0) @db.Decimal(10, 2)
+  total       Decimal   @db.Decimal(10, 2)
+
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  sale        Sale      @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  product     Product   @relation(fields: [productId], references: [id])
+
+  @@index([saleId])
+  @@index([productId])
+  @@map("sale_items")
+}
+
+// =============================================================================
+// DOCUMENTOS
+// =============================================================================
+
+/// Documento anexado (RG, CPF, contrato, etc.)
+model Document {
+  id          String    @id @default(uuid())
+  companyId   String    @map("company_id")
+  clientId    String?   @map("client_id")
+  saleId      String?   @map("sale_id")
+
+  type        String    @db.VarChar(50)    // "RG", "CPF", "CONTRATO", etc.
+  name        String    @db.VarChar(200)
+  mimeType    String    @map("mime_type") @db.VarChar(100)
+  size        Int                           // bytes
+  url         String                        // URL S3
+  s3Key       String    @map("s3_key")     // Chave no S3
+
+  uploadedById String   @map("uploaded_by_id")
+
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  client      Client?   @relation(fields: [clientId], references: [id])
+  sale        Sale?     @relation(fields: [saleId], references: [id])
+
+  @@index([clientId])
+  @@index([saleId])
+  @@index([companyId])
+  @@map("documents")
+}
+
+// =============================================================================
+// COMISSÃO
+// =============================================================================
+
+/// Regra de comissão configurável
+model CommissionRule {
+  id              String          @id @default(uuid())
+  companyId       String          @map("company_id")
+  productId       String?         @map("product_id")  // Null = regra geral
+  name            String          @db.VarChar(200)
+
+  type            CommissionType
+  value           Decimal         @db.Decimal(10, 2)  // Valor fixo ou percentual
+  minSales        Int?            @map("min_sales")    // Mínimo de vendas (metas)
+  maxValue        Decimal?        @map("max_value") @db.Decimal(10, 2) // Teto
+
+  // Período da campanha
+  startsAt        DateTime?       @map("starts_at")
+  endsAt          DateTime?       @map("ends_at")
+
+  isActive        Boolean         @default(true) @map("is_active")
+
+  // Soft delete
+  deletedAt       DateTime?       @map("deleted_at")
+
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+
+  product         Product?        @relation(fields: [productId], references: [id])
+  commissions     Commission[]
+
+  @@index([companyId])
+  @@index([productId])
+  @@index([isActive])
+  @@map("commission_rules")
+}
+
+/// Comissão gerada por venda
+model Commission {
+  id              String            @id @default(uuid())
+  companyId       String            @map("company_id")
+  saleId          String            @map("sale_id")
+  userId          String            @map("user_id")    // Vendedor / Supervisor
+  ruleId          String?           @map("rule_id")
+
+  type            CommissionType
+  grossValue      Decimal           @map("gross_value") @db.Decimal(10, 2)
+  taxValue        Decimal           @default(0) @map("tax_value") @db.Decimal(10, 2)
+  netValue        Decimal           @map("net_value") @db.Decimal(10, 2)
+
+  status          CommissionStatus  @default(PENDING)
+
+  period          String            @db.VarChar(7)   // "2024-01" (Ano-Mês)
+
+  // Pagamento
+  paidAt          DateTime?         @map("paid_at")
+  paymentRef      String?           @map("payment_ref") @db.VarChar(100)
+
+  observations    String?           @db.Text
+
+  // Soft delete
+  deletedAt       DateTime?         @map("deleted_at")
+
+  createdAt       DateTime          @default(now()) @map("created_at")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
+
+  sale            Sale              @relation(fields: [saleId], references: [id])
+  user            User              @relation(fields: [userId], references: [id])
+  rule            CommissionRule?   @relation(fields: [ruleId], references: [id])
+
+  @@index([companyId])
+  @@index([saleId])
+  @@index([userId])
+  @@index([status])
+  @@index([period])
+  @@map("commissions")
+}
+
+// =============================================================================
+// METAS
+// =============================================================================
+
+/// Meta de vendas por loja / usuário / período
+model Goal {
+  id             String    @id @default(uuid())
+  companyId      String    @map("company_id")
+  storeId        String?   @map("store_id")
+  userId         String?   @map("user_id") // Null = meta da empresa/loja
+
+  type           GoalType  @default(REVENUE)
+  referenceMonth String    @map("reference_month") @db.VarChar(7) // "2025-08"
+  targetValue    Decimal   @map("target_value") @db.Decimal(12, 2)
+
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  store          Store?    @relation(fields: [storeId], references: [id])
+  user           User?     @relation("GoalUser", fields: [userId], references: [id])
+
+  @@index([companyId])
+  @@index([storeId])
+  @@index([userId])
+  @@index([referenceMonth])
+  @@map("goals")
+}
+
+// =============================================================================
+// FINANCEIRO
+// =============================================================================
+
+/// Fechamento financeiro mensal
+model FinancialClose {
+  id               String               @id @default(uuid())
+  companyId        String               @map("company_id")
+  storeId          String?              @map("store_id")
+  referenceMonth   String               @map("reference_month") @db.VarChar(7) // "2025-08"
+
+  grossRevenue     Decimal              @default(0) @map("gross_revenue") @db.Decimal(12, 2)
+  totalCommissions Decimal              @default(0) @map("total_commissions") @db.Decimal(12, 2)
+  totalExpenses    Decimal              @default(0) @map("total_expenses") @db.Decimal(12, 2)
+  netResult        Decimal              @default(0) @map("net_result") @db.Decimal(12, 2)
+  salesCount       Int                  @default(0) @map("sales_count")
+
+  status           FinancialCloseStatus @default(CLOSED)
+  notes            String?              @db.Text
+
+  closedAt         DateTime?            @map("closed_at")
+  closedById       String?              @map("closed_by_id")
+  closedBy         User?                @relation("FinancialCloseClosedBy", fields: [closedById], references: [id])
+
+  createdAt        DateTime             @default(now()) @map("created_at")
+  updatedAt        DateTime             @updatedAt @map("updated_at")
+
+  store            Store?               @relation(fields: [storeId], references: [id])
+
+  @@index([companyId])
+  @@index([referenceMonth])
+  @@index([storeId])
+  @@map("financial_closes")
+}
+
+model FinancialMovement {
+  id             String       @id @default(uuid())
+  companyId      String       @map("company_id")
+  storeId        String?      @map("store_id")
+
+  type           MovementType
+  description    String       @db.VarChar(300)
+  amount         Decimal      @db.Decimal(12, 2)
+  referenceMonth String       @map("reference_month") @db.VarChar(7) // "2025-08"
+  category       String?      @db.VarChar(100)
+
+  createdById    String       @map("created_by_id")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+
+  store          Store?       @relation(fields: [storeId], references: [id])
+
+  @@index([companyId])
+  @@index([referenceMonth])
+  @@index([storeId])
+  @@index([type])
+  @@map("financial_movements")
+}
+
+// =============================================================================
+// NOTIFICAÇÕES
+// =============================================================================
+
+/// Notificação enviada ao usuário
+model Notification {
+  id          String              @id @default(uuid())
+  userId      String              @map("user_id")
+  companyId   String              @map("company_id")
+
+  type        NotificationType
+  title       String              @db.VarChar(200)
+  message     String              @db.Text
+  data        Json?               // Dados adicionais (payload)
+  status      NotificationStatus  @default(PENDING)
+
+  readAt      DateTime?           @map("read_at")
+  sentAt      DateTime?           @map("sent_at")
+  failureReason String?           @map("failure_reason")
+
+  createdAt   DateTime            @default(now()) @map("created_at")
+
+  user        User                @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([companyId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+// =============================================================================
+// AUDITORIA
+// =============================================================================
+
+/// Log de auditoria — toda ação relevante é registrada
+model AuditLog {
+  id          String      @id @default(uuid())
+  companyId   String      @map("company_id")
+  userId      String?     @map("user_id")    // Pode ser null (ação do sistema)
+
+  action      AuditAction
+  entity      String      @db.VarChar(50)   // "Sale", "User", "Client", etc.
+  entityId    String?     @map("entity_id")
+
+  oldValues   Json?       @map("old_values")  // Estado anterior
+  newValues   Json?       @map("new_values")  // Estado novo
+
+  ip          String?     @db.VarChar(45)
+  userAgent   String?     @map("user_agent") @db.Text
+  description String?     @db.Text
+
+  createdAt   DateTime    @default(now()) @map("created_at")
+
+  user        User?       @relation(fields: [userId], references: [id])
+
+  @@index([companyId])
+  @@index([userId])
+  @@index([entity])
+  @@index([entityId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// =============================================================================
+// REFRESH TOKENS (Persistência opcional — principal no Redis)
+// =============================================================================
+
+/// Refresh tokens para controle de sessões ativas
+model RefreshToken {
+  id          String    @id @default(uuid())
+  userId      String    @map("user_id")
+  token       String    @unique @db.VarChar(500)
+  ip          String?   @db.VarChar(45)
+  userAgent   String?   @map("user_agent") @db.Text
+  expiresAt   DateTime  @map("expires_at")
+  revokedAt   DateTime? @map("revoked_at")
+
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}

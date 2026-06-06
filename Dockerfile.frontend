@@ -1,0 +1,9 @@
+# Frontend estático servido via nginx
+FROM nginx:alpine
+
+# Copia os HTML da raiz e a pasta de assets
+COPY *.html /usr/share/nginx/html/
+COPY assets/ /usr/share/nginx/html/assets/
+
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
