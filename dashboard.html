@@ -16,6 +16,28 @@
         <p>Aqui está o resumo geral do sistema.</p>
       </div>
       <div class="head-actions">
+        <select class="select-filter" id="brandFilter" aria-label="Filtrar por marca">
+          <option value="">Todas as marcas</option>
+          <option value="TIM">TIM</option>
+          <option value="MOTOROLA">Motorola</option>
+          <option value="SAMSUNG">Samsung</option>
+        </select>
+        <select class="select-filter" id="storeFilter" aria-label="Filtrar por loja">
+          <option value="">Todas as lojas</option>
+          <optgroup label="TIM">
+            <option value="TIM-PLAN-DF">TIM Planaltina — DF</option>
+            <option value="TIM-JK-DF">TIM JK Shopping — DF</option>
+            <option value="TIM-CRB-MS">TIM Corumbá — MS</option>
+          </optgroup>
+          <optgroup label="Motorola">
+            <option value="MOTO-SP-001">Motorola Paulista — SP</option>
+            <option value="MOTO-RJ-001">Motorola Barra — RJ</option>
+          </optgroup>
+          <optgroup label="Samsung">
+            <option value="SAM-MG-001">Samsung BH Shopping — MG</option>
+            <option value="SAM-DF-001">Samsung Brasília — DF</option>
+          </optgroup>
+        </select>
         <button class="btn btn-sm">Período: Este mês ▾</button>
       </div>
     </div>

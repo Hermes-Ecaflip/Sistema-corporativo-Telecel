@@ -5,7 +5,7 @@
 // =============================================================================
 
 import { PrismaClient, UserRole, UserStatus, PersonType, ClientStatus,
-  ProductCategory, ProductStatus, CommissionType } from '@prisma/client';
+  ProductCategory, ProductStatus, CommissionType, StoreBrand } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
@@ -34,43 +34,43 @@ async function main() {
   });
   console.log(`   ✓ Empresa: ${company.tradeName}\n`);
 
-  // ─── 2. LOJAS ──────────────────────────────────────────────────────────
+  // ─── 2. LOJAS (marcas TIM, Motorola e Samsung, espalhadas pelo Brasil) ───
   console.log('🏪 Criando lojas...');
-  const storeMatriz = await prisma.store.upsert({
-    where: { code: 'LOJA-001' },
-    update: {},
-    create: {
-      companyId: company.id,
-      code: 'LOJA-001',
-      name: 'Matriz - Av. Paulista',
-      city: 'São Paulo',
-      state: 'SP',
-      phone: '(11) 3000-0001',
-    },
-  });
+  const storesData = [
+    // Lojas TIM
+    { code: 'TIM-PLAN-DF',  brand: StoreBrand.TIM,      name: 'TIM Planaltina',        city: 'Planaltina',     state: 'DF', phone: '(61) 3000-0001' },
+    { code: 'TIM-JK-DF',    brand: StoreBrand.TIM,      name: 'TIM JK Shopping',       city: 'Brasília',       state: 'DF', phone: '(61) 3000-0002' },
+    { code: 'TIM-CRB-MS',   brand: StoreBrand.TIM,      name: 'TIM Corumbá',           city: 'Corumbá',        state: 'MS', phone: '(67) 3000-0003' },
+    // Lojas Motorola
+    { code: 'MOTO-SP-001',  brand: StoreBrand.MOTOROLA, name: 'Motorola Paulista',     city: 'São Paulo',      state: 'SP', phone: '(11) 3000-0010' },
+    { code: 'MOTO-RJ-001',  brand: StoreBrand.MOTOROLA, name: 'Motorola Barra',        city: 'Rio de Janeiro', state: 'RJ', phone: '(21) 3000-0011' },
+    // Lojas Samsung
+    { code: 'SAM-MG-001',   brand: StoreBrand.SAMSUNG,  name: 'Samsung BH Shopping',   city: 'Belo Horizonte', state: 'MG', phone: '(31) 3000-0020' },
+    { code: 'SAM-DF-001',   brand: StoreBrand.SAMSUNG,  name: 'Samsung Brasília',      city: 'Brasília',       state: 'DF', phone: '(61) 3000-0021' },
+  ];
 
-  const storeFilial = await prisma.store.upsert({
-    where: { code: 'LOJA-002' },
-    update: {},
-    create: {
-      companyId: company.id,
-      code: 'LOJA-002',
-      name: 'Filial - Shopping Centro',
-      city: 'São Paulo',
-      state: 'SP',
-      phone: '(11) 3000-0002',
-    },
-  });
-  console.log(`   ✓ ${storeMatriz.name}\n   ✓ ${storeFilial.name}\n`);
+  const stores: Record<string, any> = {};
+  for (const s of storesData) {
+    const store = await prisma.store.upsert({
+      where: { companyId_code: { companyId: company.id, code: s.code } },
+      update: {},
+      create: { companyId: company.id, ...s },
+    });
+    stores[s.code] = store;
+    console.log(`   ✓ [${s.brand.padEnd(8)}] ${s.name} — ${s.city}/${s.state}`);
+  }
+  // Loja de referência (sede operacional: TIM Planaltina)
+  const storeMatriz = stores['TIM-PLAN-DF'];
+  console.log('');
 
   // ─── 3. USUÁRIOS (um por papel) ──────────────────────────────────────────
   console.log('👤 Criando usuários...');
   const usersData = [
-    { name: 'Administrador TELECEL', email: 'admin@telecel.com.br', role: UserRole.ADMIN, storeId: storeMatriz.id },
-    { name: 'Carlos Supervisor', email: 'supervisor@telecel.com.br', role: UserRole.SUPERVISOR, storeId: storeMatriz.id },
-    { name: 'Vanessa Vendedora', email: 'vendedor@telecel.com.br', role: UserRole.VENDEDOR, storeId: storeMatriz.id },
-    { name: 'Fernando Financeiro', email: 'financeiro@telecel.com.br', role: UserRole.FINANCEIRO, storeId: storeMatriz.id },
-    { name: 'Auditoria Interna', email: 'auditor@telecel.com.br', role: UserRole.AUDITOR, storeId: storeMatriz.id },
+    { name: 'Administrador TELECEL', email: 'admin@telecel.com.br', role: UserRole.ADMIN, storeId: stores['TIM-PLAN-DF'].id },
+    { name: 'Carlos Supervisor', email: 'supervisor@telecel.com.br', role: UserRole.SUPERVISOR, storeId: stores['TIM-JK-DF'].id },
+    { name: 'Vanessa Vendedora', email: 'vendedor@telecel.com.br', role: UserRole.VENDEDOR, storeId: stores['TIM-PLAN-DF'].id },
+    { name: 'Fernando Financeiro', email: 'financeiro@telecel.com.br', role: UserRole.FINANCEIRO, storeId: stores['MOTO-SP-001'].id },
+    { name: 'Auditoria Interna', email: 'auditor@telecel.com.br', role: UserRole.AUDITOR, storeId: stores['SAM-MG-001'].id },
   ];
 
   const users: Record<string, any> = {};
@@ -94,37 +94,50 @@ async function main() {
   }
   console.log('');
 
-  // ─── 4. PRODUTOS / PLANOS TIM ────────────────────────────────────────────
-  console.log('📱 Criando produtos/planos TIM...');
+  // ─── 4. PRODUTOS (planos TIM + aparelhos Motorola/Samsung) ───────────────
+  console.log('📱 Criando produtos...');
   const productsData = [
+    // Planos TIM
     {
-      name: 'TIM Black 50GB', code: 'TIM-BLACK-50', category: ProductCategory.POS_PAGO,
+      name: 'TIM Black 50GB', code: 'TIM-BLACK-50', category: ProductCategory.TIM_BLACK,
       price: 89.90, promoPrice: 79.90, dataGb: 50, loyaltyMonths: 12,
       commissionType: CommissionType.PERCENTAGE, commissionValue: 15,
       includedApps: ['WhatsApp', 'Instagram', 'TikTok', 'Facebook'],
     },
     {
-      name: 'TIM Black 100GB', code: 'TIM-BLACK-100', category: ProductCategory.POS_PAGO,
+      name: 'TIM Black 100GB', code: 'TIM-BLACK-100', category: ProductCategory.TIM_BLACK,
       price: 129.90, dataGb: 100, loyaltyMonths: 12,
       commissionType: CommissionType.PERCENTAGE, commissionValue: 18,
       includedApps: ['WhatsApp', 'Instagram', 'TikTok', 'Facebook', 'YouTube'],
     },
     {
-      name: 'TIM Controle 25GB', code: 'TIM-CTRL-25', category: ProductCategory.CONTROLE,
+      name: 'TIM Controle 25GB', code: 'TIM-CTRL-25', category: ProductCategory.PLANO_CONTROLE,
       price: 49.90, dataGb: 25, loyaltyMonths: 0,
       commissionType: CommissionType.FIXED, commissionValue: 12,
       includedApps: ['WhatsApp'],
     },
     {
-      name: 'TIM Pré Turbo', code: 'TIM-PRE-TURBO', category: ProductCategory.PRE_PAGO,
-      price: 29.90, dataGb: 10,
-      commissionType: CommissionType.FIXED, commissionValue: 5,
-      includedApps: ['WhatsApp'],
-    },
-    {
-      name: 'TIM Live Fibra 500MB', code: 'TIM-FIBRA-500', category: ProductCategory.INTERNET_FIXA,
+      name: 'TIM Ultra Fibra 500MB', code: 'TIM-FIBRA-500', category: ProductCategory.FIBRA,
       price: 99.90, loyaltyMonths: 12, includesDevice: true,
       commissionType: CommissionType.FIXED, commissionValue: 40,
+    },
+    // Aparelhos Motorola
+    {
+      name: 'Motorola Edge 50 Ultra', code: 'MOTO-EDGE50U', category: ProductCategory.APARELHO,
+      price: 4499.00, commissionType: CommissionType.PERCENTAGE, commissionValue: 8,
+    },
+    {
+      name: 'Motorola Moto G84 5G', code: 'MOTO-G84', category: ProductCategory.APARELHO,
+      price: 1899.00, commissionType: CommissionType.PERCENTAGE, commissionValue: 6,
+    },
+    // Aparelhos Samsung
+    {
+      name: 'Samsung Galaxy S24 Ultra', code: 'SAM-S24U', category: ProductCategory.APARELHO,
+      price: 7999.00, commissionType: CommissionType.PERCENTAGE, commissionValue: 7,
+    },
+    {
+      name: 'Samsung Galaxy A55 5G', code: 'SAM-A55', category: ProductCategory.APARELHO,
+      price: 2799.00, commissionType: CommissionType.PERCENTAGE, commissionValue: 6,
     },
   ];
 

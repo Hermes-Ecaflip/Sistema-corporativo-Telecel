@@ -156,6 +156,15 @@ enum MovementType {
 }
 
 
+
+/// Marca/bandeira da loja TELECEL
+enum StoreBrand {
+  TIM        // Lojas TIM
+  MOTOROLA   // Lojas Motorola
+  SAMSUNG    // Lojas Samsung
+}
+
+
 model Company {
   id          String   @id @default(uuid())
   name        String   @db.VarChar(200)
@@ -203,6 +212,7 @@ model Store {
   companyId   String   @map("company_id")
   name        String   @db.VarChar(200)
   code        String   @db.VarChar(20)      // Código interno da loja
+  brand       StoreBrand                       // Marca: TIM, MOTOROLA ou SAMSUNG
 
   // Endereço
   zipCode     String?  @map("zip_code") @db.VarChar(9)
@@ -234,6 +244,8 @@ model Store {
 
   @@unique([companyId, code])
   @@index([companyId])
+  @@index([brand])
+  @@index([state])
   @@map("stores")
 }
 

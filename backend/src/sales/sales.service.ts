@@ -163,7 +163,7 @@ export class SalesService {
     requester: { id: string; role: UserRole },
   ) {
     const {
-      page = 1, limit = 20, status, channel, sellerId, clientId, storeId,
+      page = 1, limit = 20, status, channel, sellerId, clientId, storeId, brand,
       startDate, endDate, sortBy = 'createdAt', sortOrder = 'desc',
     } = query;
 
@@ -174,6 +174,7 @@ export class SalesService {
       ...(channel && { channel }),
       ...(clientId && { clientId }),
       ...(storeId && { storeId }),
+      ...(brand && { store: { brand } }),
       ...((startDate || endDate) && {
         createdAt: {
           ...(startDate && { gte: new Date(startDate) }),

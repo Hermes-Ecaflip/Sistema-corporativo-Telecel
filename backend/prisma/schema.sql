@@ -28,6 +28,7 @@ CREATE TYPE "AuditAction"         AS ENUM ('CREATE','UPDATE','DELETE','LOGIN','L
 CREATE TYPE "GoalType"            AS ENUM ('REVENUE','SALES_COUNT');
 CREATE TYPE "FinancialCloseStatus" AS ENUM ('OPEN','CLOSED','REOPENED');
 CREATE TYPE "MovementType"        AS ENUM ('INCOME','EXPENSE');
+CREATE TYPE "StoreBrand"          AS ENUM ('TIM','MOTOROLA','SAMSUNG');
 
 -- ─────────────────────────────────────────────────────────────────────────
 -- EMPRESAS E LOJAS (multi-tenant)
@@ -49,6 +50,7 @@ CREATE TABLE "stores" (
   "id"         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   "company_id" UUID NOT NULL REFERENCES "companies"("id"),
   "code"       VARCHAR(50) UNIQUE NOT NULL,
+  "brand"      "StoreBrand" NOT NULL,
   "name"       VARCHAR(200) NOT NULL,
   "city"       VARCHAR(100),
   "state"      VARCHAR(2),
@@ -58,6 +60,8 @@ CREATE TABLE "stores" (
   "deleted_at" TIMESTAMP
 );
 CREATE INDEX ON "stores"("company_id");
+CREATE INDEX ON "stores"("brand");
+CREATE INDEX ON "stores"("state");
 
 -- ─────────────────────────────────────────────────────────────────────────
 -- USUÁRIOS (RBAC, 2FA, soft delete)

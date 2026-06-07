@@ -9,7 +9,7 @@ import {
   IsPositive, Matches, IsInt, Min, Max,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
-import { GoalType } from '@prisma/client';
+import { GoalType, StoreBrand } from '@prisma/client';
 
 // Período pré-definido para os KPIs
 export enum DashboardPeriod {
@@ -29,7 +29,15 @@ export class DashboardQueryDto {
   @IsEnum(DashboardPeriod)
   period?: DashboardPeriod = DashboardPeriod.MONTH;
 
-  @ApiPropertyOptional({ description: 'UUID da loja (filtro opcional)' })
+  @ApiPropertyOptional({
+    enum: StoreBrand,
+    description: 'Filtrar por marca/bandeira (TIM, MOTOROLA, SAMSUNG)',
+  })
+  @IsOptional()
+  @IsEnum(StoreBrand)
+  brand?: StoreBrand;
+
+  @ApiPropertyOptional({ description: 'UUID da loja específica (filtro opcional)' })
   @IsOptional()
   @IsUUID()
   storeId?: string;

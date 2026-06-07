@@ -10,7 +10,7 @@ import {
   ValidateNested, ArrayMinSize, IsPositive,
 } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
-import { SaleStatus, SaleChannel, PaymentMethod } from '@prisma/client';
+import { SaleStatus, SaleChannel, PaymentMethod, StoreBrand } from '@prisma/client';
 
 // =============================================================================
 // ITEM DE VENDA
@@ -147,7 +147,12 @@ export class QuerySaleDto {
   @IsUUID()
   clientId?: string;
 
-  @ApiPropertyOptional({ description: 'UUID da loja' })
+  @ApiPropertyOptional({ enum: StoreBrand, description: 'Filtrar por marca (TIM, MOTOROLA, SAMSUNG)' })
+  @IsOptional()
+  @IsEnum(StoreBrand)
+  brand?: StoreBrand;
+
+  @ApiPropertyOptional({ description: 'UUID da loja específica' })
   @IsOptional()
   @IsUUID()
   storeId?: string;

@@ -266,3 +266,101 @@ const TC = {
 
 window.TC = TC;
 window.tcIcon = icon;
+
+// ===================== Filtros de marca/loja =====================
+// Vincula o seletor de marca ao de loja: ao escolher uma marca,
+// só as lojas daquela marca ficam visíveis. No Módulo de integração,
+// estas seleções viram parâmetros das chamadas à API
+// (ex.: /dashboard/overview?brand=TIM&storeId=...).
+(function initBrandStoreFilters() {
+  function wire() {
+    const brandSel = document.getElementById('brandFilter');
+    const storeSel = document.getElementById('storeFilter');
+    if (!brandSel || !storeSel) return;
+
+    // Prefixo do código de cada marca, usado para casar com as <option>
+    const brandPrefix = { TIM: 'TIM-', MOTOROLA: 'MOTO-', SAMSUNG: 'SAM-' };
+
+    brandSel.addEventListener('change', () => {
+      const brand = brandSel.value;
+      // Mostrar/ocultar optgroups conforme a marca
+      [...storeSel.querySelectorAll('optgroup')].forEach((group) => {
+        const show = !brand || group.label.toUpperCase() === brand;
+        group.style.display = show ? '' : 'none';
+        [...group.children].forEach((opt) => (opt.hidden = !show));
+      });
+      // Resetar a loja se ela não pertence mais à marca escolhida
+      if (brand && storeSel.value && !storeSel.value.startsWith(brandPrefix[brand])) {
+        storeSel.value = '';
+      }
+      applyFilters();
+    });
+
+    storeSel.addEventListener('change', applyFilters);
+
+    function applyFilters() {
+      const filters = { brand: brandSel.value || null, store: storeSel.value || null };
+      // TODO (integração): recarregar KPIs/gráficos com estes filtros via API.
+      console.log('Filtros aplicados:', filters);
+      document.dispatchEvent(new CustomEvent('tc:filters', { detail: filters }));
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', wire);
+  } else {
+    wire();
+  }
+})();
+
+/* ─────────────────────────────────────────────────────────────
+   Filtros de Marca / Loja (Dashboard, Vendas, etc.)
+   Marca selecionada → filtra as lojas exibidas no segundo select.
+   Dispara o evento 'tc:filters' com { brand, store } para a página
+   reagir (integração com a API entra depois).
+   ───────────────────────────────────────────────────────────── */
+(function initBrandStoreFilters() {
+  function setup() {
+    var brandSel = document.getElementById('brandFilter');
+    var storeSel = document.getElementById('storeFilter');
+    if (!brandSel || !storeSel) return;
+
+    // Guarda os optgroups originais para poder restaurar
+    var allGroups = Array.prototype.slice.call(storeSel.querySelectorAll('optgroup'));
+
+    function applyBrandToStores() {
+      var brand = brandSel.value; // '', 'TIM', 'MOTOROLA', 'SAMSUNG'
+      allGroups.forEach(function (g) {
+        // O label do optgroup bate com a marca (TIM, Motorola, Samsung)
+        var match = !brand || g.label.toUpperCase() === brand;
+        g.style.display = match ? '' : 'none';
+        Array.prototype.slice.call(g.children).forEach(function (opt) {
+          opt.disabled = !match;
+        });
+      });
+      // Se a loja selecionada não pertence à marca, volta para "Todas"
+      var current = storeSel.selectedOptions[0];
+      if (current && current.parentElement && current.parentElement.tagName === 'OPTGROUP') {
+        if (brand && current.parentElement.label.toUpperCase() !== brand) {
+          storeSel.value = '';
+        }
+      }
+    }
+
+    function emit() {
+      document.dispatchEvent(new CustomEvent('tc:filters', {
+        detail: { brand: brandSel.value, store: storeSel.value }
+      }));
+    }
+
+    brandSel.addEventListener('change', function () { applyBrandToStores(); emit(); });
+    storeSel.addEventListener('change', emit);
+    applyBrandToStores();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setup);
+  } else {
+    setup();
+  }
+})();

@@ -56,6 +56,7 @@ export class DashboardService {
       createdAt: { gte: range.start, lte: range.end },
       ...(sellerFilter && { sellerId: sellerFilter }),
       ...(query.storeId && { storeId: query.storeId }),
+      ...(query.brand && { store: { brand: query.brand } }),
     };
 
     const [
@@ -138,6 +139,7 @@ export class DashboardService {
         status: SaleStatus.APPROVED,
         approvedAt: { gte: range.start, lte: range.end },
         ...(query.storeId && { storeId: query.storeId }),
+        ...(query.brand && { store: { brand: query.brand } }),
       },
       _sum: { totalAmount: true, totalCommission: true },
       _count: { id: true },

@@ -34,7 +34,7 @@ Desenvolvido para o **Grupo TELECEL** — parceiro credenciado TIM
 
 ## 📋 Visão Geral
 
-O **TELECEL System** é uma plataforma corporativa completa desenvolvida para o Grupo TELECEL, empresa parceira credenciada da TIM. O sistema centraliza toda a operação comercial: cadastro de clientes com validação de CPF/CNPJ e score anti-fraude, gestão de vendas com workflow de aprovação, comissões automáticas por produto, fechamento financeiro mensal e relatórios em PDF/Excel/CSV.
+O **TELECEL System** é uma plataforma corporativa completa desenvolvida para o Grupo TELECEL, que opera lojas de **três marcas** — **TIM, Motorola e Samsung** — espalhadas pelo Brasil. O sistema centraliza toda a operação comercial e permite **monitorar vendas e comissões por marca, por loja específica e por vendedor**, deixando sempre claro a qual marca e loja cada venda/vendedor pertence. Inclui cadastro de clientes com validação de CPF/CNPJ e score anti-fraude, gestão de vendas com workflow de aprovação, comissões automáticas, fechamento financeiro mensal e relatórios em PDF/Excel/CSV.
 
 A arquitetura é **multi-tenant**, com isolamento por empresa, RBAC com 5 papéis distintos e auditoria automática e imutável de todas as operações sensíveis.
 
@@ -180,8 +180,8 @@ Ou ative o **GitHub Pages**: `Settings → Pages → Source: main / root`.
 
 O seed também cria:
 - 🏢 **1 empresa** — TELECEL Telecomunicações LTDA (CNPJ: 12.345.678/0001-95)
-- 🏪 **2 lojas** — Matriz (Av. Paulista) · Filial (Shopping Centro)
-- 📱 **5 produtos TIM** — Black 50GB · Black 100GB · Controle 25GB · Pré Turbo · Live Fibra 500MB
+- 🏪 **7 lojas** em 3 marcas e vários estados — TIM (Planaltina-DF, JK Shopping-DF, Corumbá-MS) · Motorola (SP, RJ) · Samsung (MG, DF)
+- 📱 **8 produtos** — Planos TIM (Black 50/100GB, Controle, Ultra Fibra) + aparelhos Motorola (Edge 50 Ultra, Moto G84) e Samsung (Galaxy S24 Ultra, A55)
 - 👥 **3 clientes demo** — 2 PF + 1 PJ
 - 🎯 **2 metas** — meta da loja (R$ 50.000) + meta do vendedor (R$ 15.000)
 
@@ -284,6 +284,8 @@ POST /auth/login  (email + senha)
 
 17 models · 18 enums · PostgreSQL 16 · Prisma ORM
 
+> Cada **loja** tem uma marca (`StoreBrand`: TIM, MOTOROLA ou SAMSUNG), cidade e estado — permitindo monitorar vendas e comissões por marca, por loja e por vendedor individualmente.
+
 ```
 companies ──┬── stores ──┬── users ──────┬── sales ──────┬── sale_items
             │            │               ├── clients      ├── commissions
@@ -295,6 +297,8 @@ companies ──┬── stores ──┬── users ──────┬─�
             │            ├── financial_movements
             │            └── goals
 ```
+
+Cada **loja** tem uma marca (`StoreBrand`: TIM · MOTOROLA · SAMSUNG), localização (cidade/estado) e código próprio. Vendas, comissões, metas e fechamentos são vinculados à loja, permitindo filtrar e consolidar por marca, loja ou vendedor.
 
 > A estrutura completa está em [`backend/prisma/schema.prisma`](backend/prisma/schema.prisma) (fonte da verdade)
 > e em [`backend/prisma/schema.sql`](backend/prisma/schema.sql) (visualização SQL no GitHub).
