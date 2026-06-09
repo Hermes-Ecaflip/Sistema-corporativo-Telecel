@@ -30,3 +30,6 @@ Thumbs.db
 .idea/
 .vscode/
 *.swp
+
+# Certificados SSL (nunca commitar)
+nginx/ssl/*.pem

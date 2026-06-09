@@ -511,10 +511,10 @@ Cada **loja** tem uma marca (`StoreBrand`: TIM · MOTOROLA · SAMSUNG), localiza
 | 16 | Frontend — Clientes + Vendas | ✅ |
 | 17 | Frontend — Financeiro + Comissões | ✅ |
 | 18 | Frontend — Auditoria + Usuários | ✅ |
-| 19 | Testes (unitários, E2E) | ⏳ |
-| 20 | Nginx + SSL | ⏳ |
-| 21 | CI/CD GitHub Actions | 🔄 |
-| 22 | Deploy VPS Ubuntu | ⏳ |
+| 19 | Testes (unitários, E2E) | ✅ |
+| 20 | Nginx + SSL | ✅ |
+| 21 | CI/CD GitHub Actions | ✅ |
+| 22 | Deploy VPS Ubuntu | ✅ (guia) |
 | 23 | Grafana Dashboards | ⏳ |
 
 ---
@@ -522,10 +522,12 @@ Cada **loja** tem uma marca (`StoreBrand`: TIM · MOTOROLA · SAMSUNG), localiza
 ## 🧪 Testes
 
 ```bash
-docker-compose exec backend npm run test        # Unitários
-docker-compose exec backend npm run test:e2e    # E2E
-docker-compose exec backend npm run test:cov    # Cobertura
+npm test            # Unitários (15 testes — CPF/CNPJ + DashboardService)
+npm run test:cov    # Cobertura
+npm run test:e2e    # E2E (fluxo de autenticação — requer banco de teste)
 ```
+
+Os testes unitários rodam sem precisar de banco (Prisma é mockado). Os E2E sobem a aplicação real e exigem `DATABASE_URL` configurado.
 
 ---
 
