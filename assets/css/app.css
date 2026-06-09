@@ -385,3 +385,67 @@ tbody tr:hover { background: var(--bg); }
   box-shadow: 0 0 0 4px rgba(255, 90, 31, .12);
 }
 .head-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+/* ─── Página de Relatórios ─── */
+.report-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 18px;
+}
+.report-card {
+  background: #fff;
+  border: 1px solid var(--line, #eef0f4);
+  border-radius: 14px;
+  padding: 22px;
+  transition: box-shadow .18s, transform .18s;
+}
+.report-card:hover {
+  box-shadow: 0 8px 24px rgba(31,36,48,.08);
+  transform: translateY(-2px);
+}
+.report-icon {
+  width: 46px; height: 46px;
+  display: grid; place-items: center;
+  background: var(--tc-orange-tint, #fff4ef);
+  color: var(--tc-orange, #ff5a1f);
+  border-radius: 12px;
+  margin-bottom: 14px;
+}
+.report-icon svg { width: 22px; height: 22px; }
+.report-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+.report-card p { font-size: 13px; color: var(--muted, #8b93a4); line-height: 1.5; margin-bottom: 16px; }
+.report-actions { display: flex; gap: 8px; }
+.report-actions .btn { flex: 1; justify-content: center; }
+
+/* ─── Formulários (Configurações/Suporte) ─── */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-grid label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600; color: var(--ink, #1f2430); }
+.form-grid label.full { grid-column: 1 / -1; }
+.form-grid input, .form-grid select, .form-grid textarea {
+  height: 42px; padding: 0 12px; border: 1.5px solid var(--line-strong, #e2e6ec);
+  border-radius: 9px; font-family: inherit; font-size: 14px; font-weight: 500; color: var(--ink, #1f2430);
+}
+.form-grid textarea { height: auto; padding: 10px 12px; resize: vertical; }
+.form-grid input:focus, .form-grid select:focus, .form-grid textarea:focus {
+  outline: none; border-color: var(--tc-orange, #ff5a1f); box-shadow: 0 0 0 4px rgba(255,90,31,.12);
+}
+
+/* Switch toggle */
+.pref-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--line, #eef0f4); font-size: 14px; }
+.pref-row:last-child { border-bottom: none; }
+.switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; inset: 0; background: #cbd2dd; border-radius: 24px; transition: .2s; }
+.slider:before { content: ''; position: absolute; height: 18px; width: 18px; left: 3px; bottom: 3px; background: #fff; border-radius: 50%; transition: .2s; }
+.switch input:checked + .slider { background: var(--tc-orange, #ff5a1f); }
+.switch input:checked + .slider:before { transform: translateX(20px); }
+
+/* Canais de suporte */
+.channel-row { display: flex; gap: 12px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--line, #eef0f4); font-size: 14px; }
+.channel-row:last-child { border-bottom: none; }
+
+/* FAQ */
+.faq { padding: 14px 0; border-bottom: 1px solid var(--line, #eef0f4); }
+.faq:last-child { border-bottom: none; }
+.faq summary { font-weight: 600; cursor: pointer; font-size: 14px; }
+.faq p { margin-top: 8px; font-size: 13.5px; color: var(--muted, #8b93a4); line-height: 1.6; }

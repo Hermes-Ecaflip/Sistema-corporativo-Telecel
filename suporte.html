@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TELECEL — Suporte</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/app.css" />
+</head>
+<body>
+  <div id="page">
+    <div class="page-head">
+      <div>
+        <h1>Suporte</h1>
+        <p>Precisa de ajuda? Abra um chamado ou consulte os canais.</p>
+      </div>
+    </div>
+
+    <div class="grid grid-3-2">
+      <!-- Abrir chamado -->
+      <div class="card">
+        <div class="card-head"><h3>Abrir Chamado</h3></div>
+        <div class="form-grid">
+          <label>Assunto<input type="text" placeholder="Resumo do problema" /></label>
+          <label>Categoria
+            <select>
+              <option>Dúvida</option>
+              <option>Erro no sistema</option>
+              <option>Solicitação de acesso</option>
+              <option>Financeiro</option>
+              <option>Outro</option>
+            </select>
+          </label>
+          <label class="full">Descrição<textarea rows="5" placeholder="Descreva o que está acontecendo..."></textarea></label>
+        </div>
+        <div style="margin-top:16px"><button class="btn btn-primary" id="openTicket">Enviar chamado</button></div>
+      </div>
+
+      <!-- Canais -->
+      <div class="card">
+        <div class="card-head"><h3>Canais de Atendimento</h3></div>
+        <div class="channel-row">📧 <div><strong>E-mail</strong><br/>suporte@telecel.com.br</div></div>
+        <div class="channel-row">📞 <div><strong>Telefone</strong><br/>(61) 3000-0000</div></div>
+        <div class="channel-row">💬 <div><strong>WhatsApp</strong><br/>(61) 99999-0000</div></div>
+        <div class="channel-row">🕐 <div><strong>Horário</strong><br/>Seg a Sex, 8h às 18h</div></div>
+      </div>
+    </div>
+
+    <!-- FAQ -->
+    <div class="card" style="margin-top:22px">
+      <div class="card-head"><h3>Perguntas Frequentes</h3></div>
+      <details class="faq"><summary>Como redefinir minha senha?</summary><p>Na tela de login, clique em "Esqueci minha senha" e siga as instruções enviadas ao seu e-mail.</p></details>
+      <details class="faq"><summary>Como ativar a verificação em duas etapas (2FA)?</summary><p>Acesse seu perfil, vá em Segurança e escaneie o QR Code com um app autenticador (Google Authenticator, Authy).</p></details>
+      <details class="faq"><summary>Como gerar um relatório de comissões?</summary><p>Vá em Relatórios, escolha "Comissões" e o formato desejado (PDF, Excel ou CSV).</p></details>
+      <details class="faq"><summary>Como filtrar vendas por marca ou loja?</summary><p>No Dashboard ou em Vendas, use os seletores de Marca e Loja no topo da página.</p></details>
+    </div>
+  </div>
+
+  <script src="assets/js/shell.js"></script>
+  <script>TC.mountShell('support');</script>
+  <script>
+    var bt = document.getElementById('openTicket');
+    if (bt) bt.addEventListener('click', function () { (window.tcToast || alert)('Chamado enviado! Em breve entraremos em contato.'); });
+  </script>
+</body>
+</html>

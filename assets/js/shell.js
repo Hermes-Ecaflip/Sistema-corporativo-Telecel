@@ -54,12 +54,12 @@ const NAV = [
   { id: 'sales',      label: 'Vendas',       icon: 'sales',       href: 'vendas.html' },
   { id: 'commissions',label: 'Comissões',    icon: 'commissions', href: 'comissoes.html' },
   { id: 'financial',  label: 'Financeiro',   icon: 'financial',   href: 'financeiro.html' },
-  { id: 'reports',    label: 'Relatórios',   icon: 'reports',     href: '#' },
+  { id: 'reports',    label: 'Relatórios',   icon: 'reports',     href: 'relatorios.html' },
   { id: 'users',      label: 'Usuários',     icon: 'users',       href: 'usuarios.html' },
   { id: 'approvals',  label: 'Aprovações',   icon: 'approvals',   href: 'vendas.html', badge: 12 },
   { id: 'audit',      label: 'Auditoria',    icon: 'audit',       href: 'auditoria.html' },
-  { id: 'settings',   label: 'Configurações',icon: 'settings',    href: '#' },
-  { id: 'support',    label: 'Suporte',      icon: 'support',     href: '#' },
+  { id: 'settings',   label: 'Configurações',icon: 'settings',    href: 'configuracoes.html' },
+  { id: 'support',    label: 'Suporte',      icon: 'support',     href: 'suporte.html' },
 ];
 
 function icon(name, cls = '') {
@@ -364,3 +364,14 @@ window.tcIcon = icon;
     setup();
   }
 })();
+
+/* Toast simples reutilizável */
+window.tcToast = function (msg, type) {
+  var t = document.createElement('div');
+  t.className = 'tc-toast ' + (type || '');
+  t.textContent = msg;
+  t.style.cssText = 'position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:#1f2430;color:#fff;padding:13px 22px;border-radius:10px;font-size:14px;font-weight:500;box-shadow:0 12px 30px rgba(0,0,0,.25);z-index:9999;opacity:0;transition:opacity .25s';
+  document.body.appendChild(t);
+  requestAnimationFrame(function(){ t.style.opacity = '1'; });
+  setTimeout(function(){ t.style.opacity = '0'; setTimeout(function(){ t.remove(); }, 300); }, 2800);
+};

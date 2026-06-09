@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TELECEL — Relatórios</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/app.css" />
+</head>
+<body>
+  <div id="page">
+    <div class="page-head">
+      <div>
+        <h1>Relatórios</h1>
+        <p>Gere e exporte relatórios do sistema em PDF, Excel ou CSV.</p>
+      </div>
+    </div>
+
+    <!-- Cartões de tipos de relatório -->
+    <div class="report-grid" id="reportGrid"></div>
+
+    <!-- Histórico de relatórios gerados -->
+    <div class="card" style="margin-top:22px">
+      <div class="card-head"><h3>Relatórios Recentes</h3></div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Relatório</th><th>Tipo</th><th>Formato</th><th>Gerado por</th><th>Data</th><th>Ações</th></tr>
+          </thead>
+          <tbody id="recentReports"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/js/shell.js"></script>
+  <script>TC.mountShell('reports');</script>
+  <script>
+    // Tipos de relatório (espelham o backend: SALES, COMMISSIONS, FINANCIAL, CLIENTS, PRODUCTS)
+    const reportTypes = [
+      { id: 'SALES',       icon: 'sales',       title: 'Vendas',      desc: 'Vendas por período, vendedor, loja e status.' },
+      { id: 'COMMISSIONS', icon: 'commissions', title: 'Comissões',   desc: 'Comissões por vendedor, status e mês de referência.' },
+      { id: 'FINANCIAL',   icon: 'financial',   title: 'Financeiro',  desc: 'Receitas, despesas e fechamentos mensais.' },
+      { id: 'CLIENTS',     icon: 'clients',     title: 'Clientes',    desc: 'Base de clientes, score e status.' },
+      { id: 'PRODUCTS',    icon: 'reports',     title: 'Produtos',    desc: 'Catálogo, categorias e desempenho de vendas.' },
+    ];
+
+    const grid = document.getElementById('reportGrid');
+    grid.innerHTML = reportTypes.map(function (r) {
+      return '<div class="report-card">' +
+        '<div class="report-icon">' + tcIcon(r.icon) + '</div>' +
+        '<h3>' + r.title + '</h3>' +
+        '<p>' + r.desc + '</p>' +
+        '<div class="report-actions">' +
+          '<button class="btn btn-sm" data-type="' + r.id + '" data-fmt="PDF">PDF</button>' +
+          '<button class="btn btn-sm" data-type="' + r.id + '" data-fmt="EXCEL">Excel</button>' +
+          '<button class="btn btn-sm" data-type="' + r.id + '" data-fmt="CSV">CSV</button>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+
+    // Histórico demo
+    const recent = [
+      { name: 'Vendas - Maio 2025',      type: 'Vendas',     fmt: 'PDF',   by: 'admin@telecel.com.br',     date: '20/05/2025 14:32' },
+      { name: 'Comissões - Abril 2025',  type: 'Comissões',  fmt: 'Excel', by: 'financeiro@telecel.com.br', date: '02/05/2025 09:10' },
+      { name: 'Financeiro - Q1 2025',    type: 'Financeiro', fmt: 'PDF',   by: 'admin@telecel.com.br',     date: '01/04/2025 18:45' },
+      { name: 'Clientes - Base Completa',type: 'Clientes',   fmt: 'CSV',   by: 'supervisor@telecel.com.br', date: '28/03/2025 11:20' },
+    ];
+    document.getElementById('recentReports').innerHTML = recent.map(function (r) {
+      return '<tr>' +
+        '<td><strong>' + r.name + '</strong></td>' +
+        '<td>' + r.type + '</td>' +
+        '<td><span class="badge badge-gray">' + r.fmt + '</span></td>' +
+        '<td>' + r.by + '</td>' +
+        '<td>' + r.date + '</td>' +
+        '<td><button class="icon-btn" title="Baixar">' + tcIcon('reports') + '</button></td>' +
+      '</tr>';
+    }).join('');
+
+    // Ação de gerar (mock — no Módulo de integração chama POST /api/v1/reports/generate)
+    grid.addEventListener('click', function (e) {
+      const btn = e.target.closest('button[data-type]');
+      if (!btn) return;
+      const type = btn.getAttribute('data-type');
+      const fmt = btn.getAttribute('data-fmt');
+      if (window.tcToast) {
+        window.tcToast('Gerando relatório de ' + type + ' em ' + fmt + '…');
+      } else {
+        alert('Gerando relatório de ' + type + ' em ' + fmt + '…');
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TELECEL — Configurações</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/app.css" />
+</head>
+<body>
+  <div id="page">
+    <div class="page-head">
+      <div>
+        <h1>Configurações</h1>
+        <p>Preferências do sistema e da empresa.</p>
+      </div>
+    </div>
+
+    <div class="grid grid-3-2">
+      <!-- Dados da empresa -->
+      <div class="card">
+        <div class="card-head"><h3>Dados da Empresa</h3></div>
+        <div class="form-grid">
+          <label>Razão Social<input type="text" value="TELECEL Telecomunicações LTDA" /></label>
+          <label>Nome Fantasia<input type="text" value="TELECEL" /></label>
+          <label>CNPJ<input type="text" value="12.345.678/0001-95" /></label>
+          <label>Código de Parceiro TIM<input type="text" value="TIM-TC-001" /></label>
+          <label>E-mail<input type="email" value="contato@telecel.com.br" /></label>
+          <label>Telefone<input type="text" value="(61) 3000-0000" /></label>
+        </div>
+        <div style="margin-top:16px"><button class="btn btn-primary" id="saveCompany">Salvar alterações</button></div>
+      </div>
+
+      <!-- Preferências -->
+      <div class="card">
+        <div class="card-head"><h3>Preferências</h3></div>
+        <div class="pref-row"><span>Notificações por e-mail</span><label class="switch"><input type="checkbox" checked><span class="slider"></span></label></div>
+        <div class="pref-row"><span>Exigir 2FA para todos</span><label class="switch"><input type="checkbox" checked><span class="slider"></span></label></div>
+        <div class="pref-row"><span>Aprovação automática de vendas</span><label class="switch"><input type="checkbox"><span class="slider"></span></label></div>
+        <div class="pref-row"><span>Modo escuro</span><label class="switch"><input type="checkbox"><span class="slider"></span></label></div>
+      </div>
+    </div>
+
+    <!-- Segurança -->
+    <div class="card" style="margin-top:22px">
+      <div class="card-head"><h3>Segurança</h3></div>
+      <div class="form-grid">
+        <label>Tempo de sessão (minutos)<input type="number" value="15" /></label>
+        <label>Tentativas de login até bloqueio<input type="number" value="5" /></label>
+        <label>Tempo de bloqueio (minutos)<input type="number" value="15" /></label>
+      </div>
+      <div style="margin-top:16px"><button class="btn btn-primary" id="saveSecurity">Salvar segurança</button></div>
+    </div>
+  </div>
+
+  <script src="assets/js/shell.js"></script>
+  <script>TC.mountShell('settings');</script>
+  <script>
+    function bind(id, msg) {
+      var el = document.getElementById(id);
+      if (el) el.addEventListener('click', function () { (window.tcToast || alert)(msg); });
+    }
+    bind('saveCompany', 'Dados da empresa salvos.');
+    bind('saveSecurity', 'Configurações de segurança salvas.');
+  </script>
+</body>
+</html>
