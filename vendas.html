@@ -50,6 +50,7 @@
   <script>
     TC.mountShell('sales');
     document.getElementById('btnNew').innerHTML = tcIcon('plus') + ' Nova Venda';
+    document.getElementById('btnNew').addEventListener('click', function () { (window.tcToast||alert)('Abrindo formulário de nova venda...'); });
 
     const columns = [
       { title: 'Criada', dot: '#8b93a4', count: 15, total: 'R$ 275.460,00', more: 12, cards: [

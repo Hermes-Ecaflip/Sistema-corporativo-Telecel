@@ -49,7 +49,9 @@
   <script>
     TC.mountShell('users');
     document.getElementById('btnFilter').innerHTML = tcIcon('filter') + ' Filtros';
-    document.getElementById('btnNew').innerHTML = tcIcon('plus') + ' Novo Usuário';
+    var btnNew = document.getElementById('btnNew');
+    btnNew.innerHTML = tcIcon('plus') + ' Novo Usuário';
+    btnNew.addEventListener('click', function () { window.location.href = 'cadastro-usuario.html'; });
 
     const users = [
       { name: 'Admin', email: 'admin@telecel.com.br', role: 'Administrador', store: 'TIM Planaltina — DF', brand: 'TIM', status: 'Ativo', last: '20/05/2025 14:32' },

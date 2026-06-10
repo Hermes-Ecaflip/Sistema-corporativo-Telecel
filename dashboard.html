@@ -143,16 +143,16 @@
     // gráfico de faturamento (linha dupla)
     const days = Array.from({length: 15}, (_, i) => String(i*2+1).padStart(2,'0'));
     TC.lineChart(document.getElementById('chartRevenue'), [
-      { data: [42,55,48,67,72,63,80,75,88,79,92,85,98,90,105], color: '#ff5a1f' },
-      { data: [30,38,35,45,50,44,58,53,62,57,66,60,70,65,74], color: '#1d4ed8', fill: false },
-    ], { labels: days, height: 240 });
+      { name: 'Faturamento', data: [42,55,48,67,72,63,80,75,88,79,92,85,98,90,105], color: '#ff5a1f' },
+      { name: 'Vendas', data: [30,38,35,45,50,44,58,53,62,57,66,60,70,65,74], color: '#1d4ed8', fill: false },
+    ], { labels: days, height: 240, currency: false });
 
     // donut de status
     TC.donut(document.getElementById('statusDonut'), [
-      { value: 850, color: '#137a3f' },
-      { value: 200, color: '#b7791f' },
-      { value: 150, color: '#1d4ed8' },
-      { value: 89,  color: '#cf222e' },
+      { label: 'Concluídas', value: 850, color: '#137a3f' },
+      { label: 'Em análise', value: 200, color: '#b7791f' },
+      { label: 'Aprovadas', value: 150, color: '#1d4ed8' },
+      { label: 'Reprovadas', value: 89,  color: '#cf222e' },
     ], { center: { value: '1.289', label: 'Total' }, size: 180 });
 
     // ranking

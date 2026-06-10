@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TELECEL — Cadastrar Usuário</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/app.css" />
+</head>
+<body>
+  <div id="page">
+    <div class="page-head">
+      <div>
+        <h1>Cadastrar Usuário</h1>
+        <p>Crie um novo funcionário e defina loja, cargo e setor. Restrito à administração.</p>
+      </div>
+      <div class="head-actions">
+        <a href="usuarios.html" class="btn btn-sm">← Voltar para usuários</a>
+      </div>
+    </div>
+
+    <!-- Aviso de permissão (some se for admin) -->
+    <div class="alert-box" id="permAlert" style="display:none">
+      🔒 Esta área é exclusiva para administradores. Você não tem permissão para cadastrar usuários.
+    </div>
+
+    <div id="formWrap">
+      <div class="card">
+        <div class="card-head"><h3>Dados do Funcionário</h3></div>
+        <form id="userForm">
+          <div class="form-grid">
+            <label class="full">Nome completo *
+              <input type="text" id="f-name" placeholder="Ex: Maria Oliveira Santos" required />
+            </label>
+            <label>E-mail *
+              <input type="email" id="f-email" placeholder="usuario@telecel.com.br" required />
+            </label>
+            <label>CPF
+              <input type="text" id="f-cpf" placeholder="000.000.000-00" />
+            </label>
+            <label>Telefone
+              <input type="text" id="f-phone" placeholder="(00) 00000-0000" />
+            </label>
+            <label>Data de nascimento
+              <input type="date" id="f-birth" />
+            </label>
+
+            <label>Loja onde trabalha *
+              <select id="f-store" required>
+                <option value="">Selecione a loja</option>
+                <optgroup label="TIM">
+                  <option value="TIM-PLAN-DF">TIM Planaltina — DF</option>
+                  <option value="TIM-JK-DF">TIM JK Shopping — DF</option>
+                  <option value="TIM-CRB-MS">TIM Corumbá — MS</option>
+                </optgroup>
+                <optgroup label="Motorola">
+                  <option value="MOTO-SP-001">Motorola Paulista — SP</option>
+                  <option value="MOTO-RJ-001">Motorola Barra — RJ</option>
+                </optgroup>
+                <optgroup label="Samsung">
+                  <option value="SAM-MG-001">Samsung BH Shopping — MG</option>
+                  <option value="SAM-DF-001">Samsung Brasília — DF</option>
+                </optgroup>
+              </select>
+            </label>
+
+            <label>Setor *
+              <select id="f-sector" required>
+                <option value="VENDAS">Vendas</option>
+                <option value="ESTOQUE">Estoque</option>
+                <option value="RH">Recursos Humanos</option>
+                <option value="FINANCEIRO">Financeiro</option>
+                <option value="GERENCIA">Gerência</option>
+              </select>
+            </label>
+
+            <label>Cargo / Perfil de acesso *
+              <select id="f-role" required>
+                <option value="VENDEDOR">Vendedor</option>
+                <option value="ESTOQUISTA">Estoquista</option>
+                <option value="RH">RH</option>
+                <option value="FINANCEIRO">Financeiro</option>
+                <option value="SUPERVISOR">Supervisor</option>
+                <option value="GERENTE">Gerente</option>
+                <option value="AUDITOR">Auditor</option>
+                <option value="ADMIN">Administrador</option>
+              </select>
+            </label>
+
+            <label>Senha provisória *
+              <input type="password" id="f-pass" placeholder="Mínimo 8 caracteres" required />
+            </label>
+            <label class="checkbox-field full">
+              <input type="checkbox" id="f-2fa" checked />
+              <span>Exigir configuração de 2FA no primeiro acesso</span>
+            </label>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="btn" id="btnCancel">Cancelar</button>
+            <button type="submit" class="btn btn-primary">Cadastrar funcionário</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/js/shell.js"></script>
+  <script>TC.mountShell('users');</script>
+  <script>
+    // Mapa de código de loja → nome legível
+    var storeNames = {
+      'TIM-PLAN-DF': 'TIM Planaltina — DF', 'TIM-JK-DF': 'TIM JK Shopping — DF', 'TIM-CRB-MS': 'TIM Corumbá — MS',
+      'MOTO-SP-001': 'Motorola Paulista — SP', 'MOTO-RJ-001': 'Motorola Barra — RJ',
+      'SAM-MG-001': 'Samsung BH Shopping — MG', 'SAM-DF-001': 'Samsung Brasília — DF',
+    };
+
+    // Sugerir setor ao escolher cargo
+    var roleSector = { VENDEDOR:'VENDAS', ESTOQUISTA:'ESTOQUE', RH:'RH', FINANCEIRO:'FINANCEIRO', GERENTE:'GERENCIA', SUPERVISOR:'VENDAS', AUDITOR:'GERENCIA', ADMIN:'GERENCIA' };
+    document.getElementById('f-role').addEventListener('change', function (e) {
+      var s = roleSector[e.target.value];
+      if (s) document.getElementById('f-sector').value = s;
+    });
+
+    // Controle de permissão: só ADMIN pode cadastrar.
+    // (No sistema real, o papel vem do token; aqui usamos o usuário do shell, que é Admin.)
+    var currentRole = (window.TC_USER && window.TC_USER.role) || 'ADMIN';
+    if (currentRole !== 'ADMIN') {
+      document.getElementById('permAlert').style.display = 'block';
+      document.getElementById('formWrap').style.display = 'none';
+    }
+
+    document.getElementById('btnCancel').addEventListener('click', function () { window.location.href = 'usuarios.html'; });
+
+    document.getElementById('userForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var name = document.getElementById('f-name').value.trim();
+      var email = document.getElementById('f-email').value.trim();
+      var store = document.getElementById('f-store').value;
+      var role = document.getElementById('f-role').value;
+      var sector = document.getElementById('f-sector').value;
+      var pass = document.getElementById('f-pass').value;
+
+      if (!name || !email || !store || !pass) { (window.tcToast||alert)('Preencha os campos obrigatórios.', 'error'); return; }
+      if (pass.length < 8) { (window.tcToast||alert)('A senha deve ter no mínimo 8 caracteres.', 'error'); return; }
+
+      // No sistema real: POST /api/v1/users  { name, email, storeId, role, sector, password }
+      (window.tcToast||alert)('Funcionário "' + name + '" cadastrado na ' + storeNames[store] + ' (' + role + ').', 'success');
+      setTimeout(function () { window.location.href = 'usuarios.html'; }, 1200);
+    });
+  </script>
+</body>
+</html>

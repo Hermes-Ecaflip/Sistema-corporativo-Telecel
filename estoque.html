@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TELECEL — Estoque</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/app.css" />
+</head>
+<body>
+  <div id="page">
+    <div class="page-head">
+      <div>
+        <h1>Estoque</h1>
+        <p>Controle de aparelhos por IMEI e código de barras, por marca e loja.</p>
+      </div>
+      <div class="head-actions">
+        <select class="select-filter" id="brandFilter" aria-label="Marca">
+          <option value="">Todas as marcas</option>
+          <option value="TIM">TIM</option>
+          <option value="MOTOROLA">Motorola</option>
+          <option value="SAMSUNG">Samsung</option>
+        </select>
+        <button class="btn btn-primary" id="btnAddItem"></button>
+      </div>
+    </div>
+
+    <!-- KPIs do estoque -->
+    <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr)">
+      <div class="kpi"><div class="kpi-label">Total em Estoque</div><div class="kpi-value" id="kpiTotal">—</div></div>
+      <div class="kpi"><div class="kpi-label">Disponíveis</div><div class="kpi-value" id="kpiAvail">—</div></div>
+      <div class="kpi"><div class="kpi-label">Em Trânsito</div><div class="kpi-value" id="kpiTransit">—</div></div>
+      <div class="kpi"><div class="kpi-label">Danificados</div><div class="kpi-value" id="kpiDamaged">—</div></div>
+    </div>
+
+    <!-- Abas -->
+    <div class="tabs" id="tabs">
+      <button class="tab active" data-tab="items">Itens</button>
+      <button class="tab" data-tab="transfers">Transferências</button>
+      <button class="tab" data-tab="damage">Danificados</button>
+    </div>
+
+    <!-- ABA: ITENS -->
+    <div class="tab-panel active" data-panel="items">
+      <div class="card">
+        <div class="card-head" style="justify-content:space-between;display:flex;align-items:center">
+          <h3>Itens de Estoque</h3>
+          <input type="text" class="search-inline" id="searchItems" placeholder="Buscar por IMEI ou código..." />
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Produto</th><th>IMEI</th><th>Cód. Barras</th><th>Marca</th><th>Loja</th><th>Status</th></tr>
+            </thead>
+            <tbody id="itemsBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ABA: TRANSFERÊNCIAS -->
+    <div class="tab-panel" data-panel="transfers">
+      <div class="card">
+        <div class="card-head" style="justify-content:space-between;display:flex;align-items:center">
+          <h3>Transferências entre Lojas</h3>
+          <button class="btn btn-sm btn-primary" id="btnNewTransfer">+ Nova Transferência</button>
+        </div>
+        <p class="hint">Só é possível transferir entre lojas da mesma marca (TIM→TIM, Motorola→Motorola, Samsung→Samsung).</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Código</th><th>Origem</th><th>Destino</th><th>Marca</th><th>Itens</th><th>Status</th><th>Documento</th></tr>
+            </thead>
+            <tbody id="transfersBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ABA: DANIFICADOS -->
+    <div class="tab-panel" data-panel="damage">
+      <div class="card">
+        <div class="card-head" style="justify-content:space-between;display:flex;align-items:center">
+          <h3>Aparelhos Danificados</h3>
+          <button class="btn btn-sm btn-primary" id="btnNewDamage">+ Registrar Dano</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Código</th><th>Aparelho</th><th>Marca</th><th>Loja</th><th>Severidade</th><th>Status</th><th>Documento</th></tr>
+            </thead>
+            <tbody id="damageBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modais -->
+    <div class="modal-overlay" id="modalOverlay"></div>
+  </div>
+
+  <script src="assets/js/shell.js"></script>
+  <script>TC.mountShell('stock');</script>
+  <script src="assets/js/stock.js"></script>
+</body>
+</html>

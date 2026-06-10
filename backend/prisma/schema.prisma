@@ -20,9 +20,12 @@ datasource db {
 
 /// Papéis de usuário no sistema (RBAC)
 enum UserRole {
-  ADMIN       // Acesso total
+  ADMIN       // Acesso total ao sistema
+  GERENTE     // Gerente de loja (todos os setores da loja)
   SUPERVISOR  // Gerencia equipe e vendas
   VENDEDOR    // Registra vendas
+  ESTOQUISTA  // Controle de estoque
+  RH          // Recursos Humanos
   FINANCEIRO  // Acesso ao módulo financeiro
   AUDITOR     // Somente leitura
 }
@@ -165,6 +168,51 @@ enum StoreBrand {
 }
 
 
+
+/// Setor/departamento dentro da loja
+enum Sector {
+  VENDAS     // Vendas (atendimento e contratos)
+  ESTOQUE    // Controle de estoque
+  RH         // Recursos Humanos
+  FINANCEIRO // Financeiro da loja
+  GERENCIA   // Gerência da loja
+}
+
+/// Situação de um item no estoque
+enum StockStatus {
+  AVAILABLE   // Disponível para venda
+  RESERVED    // Reservado para uma venda
+  SOLD        // Vendido
+  TRANSFERRED // Transferido para outra loja
+  DAMAGED     // Danificado / avariado
+  IN_TRANSIT  // Em trânsito (transferência em andamento)
+}
+
+/// Status de uma transferência de estoque
+enum TransferStatus {
+  PENDING    // Aguardando aprovação/envio
+  IN_TRANSIT // Em trânsito
+  COMPLETED  // Concluída (recebida)
+  CANCELLED  // Cancelada
+}
+
+/// Severidade do dano em um aparelho
+enum DamageSeverity {
+  MINOR    // Leve (arranhões, estético)
+  MODERATE // Moderado (funcional com restrições)
+  SEVERE   // Grave (inutilizável)
+  TOTAL    // Perda total
+}
+
+/// Status do registro de dano
+enum DamageStatus {
+  REPORTED   // Registrado
+  IN_REVIEW  // Em análise
+  RESOLVED   // Resolvido
+  WRITTEN_OFF // Baixado (perda)
+}
+
+
 model Company {
   id          String   @id @default(uuid())
   name        String   @db.VarChar(200)
@@ -241,6 +289,10 @@ model Store {
   goals       Goal[]
   financialCloses    FinancialClose[]
   financialMovements FinancialMovement[]
+  stockItems         StockItem[]
+  transfersFrom      StockTransfer[]   @relation("TransferFromStore")
+  transfersTo        StockTransfer[]   @relation("TransferToStore")
+  damageReports      DamageReport[]
 
   @@unique([companyId, code])
   @@index([companyId])
@@ -269,6 +321,7 @@ model User {
   // Autenticação
   password    String      // Hash bcrypt
   role        UserRole    @default(VENDEDOR)
+  sector      Sector      @default(VENDAS)
   status      UserStatus  @default(PENDING_VERIFICATION)
 
   // 2FA
@@ -309,6 +362,10 @@ model User {
   rejectedSales   Sale[]        @relation("RejectedBy")
   goalsAssigned    Goal[]            @relation("GoalUser")
   financialCloses  FinancialClose[]  @relation("FinancialCloseClosedBy")
+  transfersRequested StockTransfer[]   @relation("TransferRequestedBy")
+  transfersApproved  StockTransfer[]   @relation("TransferApprovedBy")
+  damagesReported    DamageReport[]    @relation("DamageReportedBy")
+  damagesResolved    DamageReport[]    @relation("DamageResolvedBy")
 
   @@index([companyId])
   @@index([storeId])
@@ -414,8 +471,9 @@ model Product {
   companyId     String          @map("company_id")
 
   category      ProductCategory
+  brand         StoreBrand?                          // Marca do produto (p/ aparelhos: TIM, MOTOROLA, SAMSUNG)
   name          String          @db.VarChar(200)
-  code          String          @db.VarChar(50)     // Código TIM interno
+  code          String          @db.VarChar(50)     // Código interno
   description   String?         @db.Text
   imageUrl      String?         @map("image_url")
 
@@ -450,6 +508,7 @@ model Product {
   // Relações
   saleItems     SaleItem[]
   commissionRules CommissionRule[]
+  stockItems    StockItem[]
 
   @@unique([companyId, code])
   @@index([companyId])
@@ -831,4 +890,143 @@ model RefreshToken {
   @@index([token])
   @@index([expiresAt])
   @@map("refresh_tokens")
+}
+
+// =============================================================================
+// ESTOQUE — Itens individuais com IMEI / código de barras
+// =============================================================================
+model StockItem {
+  id          String      @id @default(uuid())
+  companyId   String      @map("company_id")
+  storeId     String      @map("store_id")
+  productId   String      @map("product_id")
+
+  // Identificação física do aparelho
+  imei        String?     @unique @db.VarChar(20)  // IMEI (aparelhos)
+  barcode     String?     @db.VarChar(60)          // Código de barras / EAN
+  serialNumber String?    @map("serial_number") @db.VarChar(60)
+
+  brand       StoreBrand                            // Setor de destino: TIM, MOTOROLA, SAMSUNG
+  status      StockStatus @default(AVAILABLE)
+
+  costPrice   Decimal?    @map("cost_price") @db.Decimal(10, 2)  // Custo de aquisição
+  notes       String?     @db.Text
+
+  // Soft delete
+  deletedAt   DateTime?   @map("deleted_at")
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+
+  // Relações
+  store          Store               @relation(fields: [storeId], references: [id])
+  product        Product             @relation(fields: [productId], references: [id])
+  transferItems  StockTransferItem[]
+  damageReports  DamageReport[]
+
+  @@index([companyId])
+  @@index([storeId])
+  @@index([productId])
+  @@index([imei])
+  @@index([barcode])
+  @@index([status])
+  @@index([brand])
+  @@map("stock_items")
+}
+
+// =============================================================================
+// TRANSFERÊNCIA DE ESTOQUE entre lojas (mesma marca) — gera PDF assinado
+// =============================================================================
+model StockTransfer {
+  id            String         @id @default(uuid())
+  companyId     String         @map("company_id")
+  transferCode  String         @map("transfer_code") @db.VarChar(30) // Ex: TRF-2026-0001
+
+  fromStoreId   String         @map("from_store_id")
+  toStoreId     String         @map("to_store_id")
+  brand         StoreBrand                                            // Só transfere dentro da mesma marca
+
+  status        TransferStatus @default(PENDING)
+  reason        String?        @db.Text
+
+  // Gerência / assinatura
+  requestedById String         @map("requested_by_id")
+  approvedById  String?        @map("approved_by_id")
+  managerSignature String?     @map("manager_signature")             // Nome/assinatura do gerente
+  documentUrl   String?        @map("document_url")                  // PDF gerado
+
+  sentAt        DateTime?      @map("sent_at")
+  receivedAt    DateTime?      @map("received_at")
+
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+
+  // Relações
+  fromStore     Store               @relation("TransferFromStore", fields: [fromStoreId], references: [id])
+  toStore       Store               @relation("TransferToStore", fields: [toStoreId], references: [id])
+  requestedBy   User                @relation("TransferRequestedBy", fields: [requestedById], references: [id])
+  approvedBy    User?               @relation("TransferApprovedBy", fields: [approvedById], references: [id])
+  items         StockTransferItem[]
+
+  @@index([companyId])
+  @@index([fromStoreId])
+  @@index([toStoreId])
+  @@index([status])
+  @@index([brand])
+  @@map("stock_transfers")
+}
+
+model StockTransferItem {
+  id           String        @id @default(uuid())
+  transferId   String        @map("transfer_id")
+  stockItemId  String        @map("stock_item_id")
+
+  transfer     StockTransfer @relation(fields: [transferId], references: [id], onDelete: Cascade)
+  stockItem    StockItem     @relation(fields: [stockItemId], references: [id])
+
+  @@unique([transferId, stockItemId])
+  @@index([transferId])
+  @@map("stock_transfer_items")
+}
+
+// =============================================================================
+// APARELHO DANIFICADO — registro com upload de imagem e PDF
+// =============================================================================
+model DamageReport {
+  id           String         @id @default(uuid())
+  companyId    String         @map("company_id")
+  storeId      String         @map("store_id")
+  stockItemId  String?        @map("stock_item_id")  // Item de estoque afetado (se houver)
+  reportCode   String         @map("report_code") @db.VarChar(30)  // Ex: DAN-2026-0001
+
+  // Identificação do aparelho (caso não esteja no estoque)
+  imei         String?        @db.VarChar(20)
+  productName  String         @map("product_name") @db.VarChar(200)
+  brand        StoreBrand
+
+  severity     DamageSeverity @default(MODERATE)
+  status       DamageStatus   @default(REPORTED)
+  description  String         @db.Text                // Descrição do dano
+  imageUrls    String[]       @map("image_urls")      // Fotos do aparelho danificado
+  documentUrl  String?        @map("document_url")    // PDF gerado
+
+  estimatedLoss Decimal?      @map("estimated_loss") @db.Decimal(10, 2)
+
+  reportedById String         @map("reported_by_id")
+  resolvedById String?        @map("resolved_by_id")
+  resolvedAt   DateTime?      @map("resolved_at")
+
+  createdAt    DateTime       @default(now()) @map("created_at")
+  updatedAt    DateTime       @updatedAt @map("updated_at")
+
+  // Relações
+  store        Store          @relation(fields: [storeId], references: [id])
+  stockItem    StockItem?     @relation(fields: [stockItemId], references: [id])
+  reportedBy   User           @relation("DamageReportedBy", fields: [reportedById], references: [id])
+  resolvedBy   User?          @relation("DamageResolvedBy", fields: [resolvedById], references: [id])
+
+  @@index([companyId])
+  @@index([storeId])
+  @@index([status])
+  @@index([brand])
+  @@map("damage_reports")
 }

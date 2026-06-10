@@ -1,14 +1,14 @@
 <div align="center">
 
 <img src="https://img.shields.io/badge/GRUPO-TELECEL-FF5A1F?style=for-the-badge&logoColor=white" />
-<img src="https://img.shields.io/badge/Parceiro%20Credenciado-TIM-003DA5?style=for-the-badge&logoColor=white" />
+<img src="https://img.shields.io/badge/Gestão-Multimarca-003DA5?style=for-the-badge&logoColor=white" />
 
 <br /><br />
 
 # TELECEL SYSTEM
 
 **Plataforma corporativa enterprise para gestão de vendas, clientes, comissões e financeiro**<br/>
-Desenvolvido para o **Grupo TELECEL** — parceiro credenciado TIM
+Desenvolvido para o **Grupo TELECEL** — gestão integrada de varejo multimarca
 
 <br/>
 
@@ -23,10 +23,10 @@ Desenvolvido para o **Grupo TELECEL** — parceiro credenciado TIM
 
 <br/>
 
-[![Backend](https://img.shields.io/badge/Backend-13%20Módulos%20✅-28a745?style=flat-square)]()
-[![Frontend](https://img.shields.io/badge/Frontend-9%20Telas%20✅-28a745?style=flat-square)]()
-[![Database](https://img.shields.io/badge/Database-17%20Models%20%7C%2018%20Enums-4169E1?style=flat-square)]()
-[![API](https://img.shields.io/badge/API-70%2B%20Endpoints-FF5A1F?style=flat-square)]()
+[![Backend](https://img.shields.io/badge/Backend-14%20Módulos%20✅-28a745?style=flat-square)]()
+[![Frontend](https://img.shields.io/badge/Frontend-13%20Telas%20✅-28a745?style=flat-square)]()
+[![Database](https://img.shields.io/badge/Database-21%20Models%20%7C%2022%20Enums-4169E1?style=flat-square)]()
+[![API](https://img.shields.io/badge/API-85%2B%20Endpoints-FF5A1F?style=flat-square)]()
 
 </div>
 
@@ -52,6 +52,22 @@ index.html → 2fa.html → dashboard.html
 ```
 
 </div>
+
+---
+
+## 🏢 Setores, Estoque e Transferências
+
+O sistema cobre toda a operação interna do Grupo TELECEL — uma rede própria de varejo multimarca (não vinculada a operadoras):
+
+**Setores** — cada funcionário pertence a um setor: Vendas, Estoque, RH, Financeiro ou Gerência. Os cargos (perfis de acesso) incluem Admin, Gerente, Supervisor, Vendedor, Estoquista, RH, Financeiro e Auditor.
+
+**Cadastro de usuários** — tela exclusiva da administração (`cadastro-usuario.html`) para registrar funcionários informando nome, loja, cargo e setor.
+
+**Estoque por IMEI/código de barras** — cada aparelho é um item rastreável (`StockItem`) com IMEI único, código de barras e marca (TIM, Motorola ou Samsung), vinculado a uma loja.
+
+**Transferência entre lojas** — só é permitida entre lojas da **mesma marca** (TIM→TIM, Motorola→Motorola, Samsung→Samsung). A transferência gera um **documento PDF de remanejamento** com origem, destino, itens e assinatura do gerente responsável.
+
+**Aparelhos danificados** — registro com severidade, descrição e **upload de imagens**, gerando um **documento PDF** do dano.
 
 ---
 
@@ -166,13 +182,16 @@ Ou ative o **GitHub Pages**: `Settings → Pages → Source: main / root`.
 
 > Criadas automaticamente pelo `npm run prisma:seed`
 
-| Papel | E-mail | Senha |
-|-------|--------|-------|
-| 👑 Admin | admin@telecel.com.br | `Telecel@2025` |
-| 🔍 Supervisor | supervisor@telecel.com.br | `Telecel@2025` |
-| 💼 Vendedor | vendedor@telecel.com.br | `Telecel@2025` |
-| 💰 Financeiro | financeiro@telecel.com.br | `Telecel@2025` |
-| 🔎 Auditor | auditor@telecel.com.br | `Telecel@2025` |
+| Cargo | E-mail | Setor | Senha |
+|-------|--------|-------|-------|
+| 👑 Admin | admin@telecel.com.br | Gerência | `Telecel@2025` |
+| 🏪 Gerente | gerente@telecel.com.br | Gerência | `Telecel@2025` |
+| 🔍 Supervisor | supervisor@telecel.com.br | Vendas | `Telecel@2025` |
+| 💼 Vendedor | vendedor@telecel.com.br | Vendas | `Telecel@2025` |
+| 📦 Estoquista | estoque@telecel.com.br | Estoque | `Telecel@2025` |
+| 👥 RH | rh@telecel.com.br | RH | `Telecel@2025` |
+| 💰 Financeiro | financeiro@telecel.com.br | Financeiro | `Telecel@2025` |
+| 🔎 Auditor | auditor@telecel.com.br | Gerência | `Telecel@2025` |
 
 > ⚠️ **Produção:** altere todas as senhas imediatamente após o primeiro acesso.
 
@@ -472,6 +491,7 @@ Cada **loja** tem uma marca (`StoreBrand`: TIM · MOTOROLA · SAMSUNG), localiza
 | 11 | **Notificações** | E-mail HTML (Nodemailer) · In-app · Templates transacionais |
 | 12 | **Dashboard** | KPIs por papel · Ranking · Tendência diária · Metas com progresso |
 | 13 | **Seeds & Migrations** | Dados iniciais · app.module.ts · Guia de migrations |
+| 14 | **Estoque** | Itens por IMEI/código de barras · Transferência entre lojas (mesma marca) com PDF assinado · Aparelhos danificados com upload de imagem e PDF |
 
 ### ✅ Frontend (9 telas)
 
@@ -485,7 +505,12 @@ Cada **loja** tem uma marca (`StoreBrand`: TIM · MOTOROLA · SAMSUNG), localiza
 | Comissões | `comissoes.html` | Ranking vendedores · Totais · Status |
 | Financeiro | `financeiro.html` | Receita × Despesas · Gráficos · Fechamento |
 | Auditoria | `auditoria.html` | Logs de auditoria · Filtros · Paginação |
-| Usuários | `usuarios.html` | CRUD · Papéis · Status · Avatar |
+| Usuários | `usuarios.html` | CRUD · Papéis · Status · Loja com marca |
+| Cadastrar Usuário | `cadastro-usuario.html` | Admin-only · Nome · Loja · Cargo · Setor |
+| Estoque | `estoque.html` | Itens (IMEI/código) · Transferências · Danificados |
+| Relatórios | `relatorios.html` | PDF/Excel/CSV por tipo |
+| Configurações | `configuracoes.html` | Empresa · Preferências · Segurança |
+| Suporte | `suporte.html` | Chamados · Canais · FAQ |
 
 ---
 
@@ -552,7 +577,7 @@ Proprietária — Grupo TELECEL. Uso interno exclusivo.
 <div align="center">
 
 <img src="https://img.shields.io/badge/GRUPO-TELECEL-FF5A1F?style=for-the-badge&logoColor=white" />
-<img src="https://img.shields.io/badge/Parceiro%20Credenciado-TIM-003DA5?style=for-the-badge&logoColor=white" />
+<img src="https://img.shields.io/badge/Gestão-Multimarca-003DA5?style=for-the-badge&logoColor=white" />
 
 <br/><br/>
 

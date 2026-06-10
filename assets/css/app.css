@@ -449,3 +449,135 @@ tbody tr:hover { background: var(--bg); }
 .faq:last-child { border-bottom: none; }
 .faq summary { font-weight: 600; cursor: pointer; font-size: 14px; }
 .faq p { margin-top: 8px; font-size: 13.5px; color: var(--muted, #8b93a4); line-height: 1.6; }
+
+/* ─── Tooltips interativos de gráfico ─── */
+.chart-tooltip {
+  position: absolute;
+  top: 8px;
+  background: #1f2430;
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  pointer-events: none;
+  white-space: nowrap;
+  box-shadow: 0 6px 20px rgba(0,0,0,.25);
+  transition: opacity .15s;
+  z-index: 20;
+}
+.chart-tooltip .tt-title { font-weight: 700; margin-bottom: 4px; font-size: 11px; opacity: .85; }
+.chart-tooltip .tt-row { display: flex; align-items: center; gap: 6px; line-height: 1.7; }
+.chart-tooltip .tt-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.donut-tip { top: 50%; left: 50%; transform: translate(-50%, -50%); }
+.donut-center { transition: opacity .15s; }
+
+/* ─── Abas (tabs) ─── */
+.tabs { display: flex; gap: 4px; border-bottom: 2px solid var(--line, #eef0f4); margin: 22px 0 18px; }
+.tab {
+  padding: 10px 18px; border: none; background: none; cursor: pointer;
+  font-family: inherit; font-size: 14px; font-weight: 600; color: var(--muted, #8b93a4);
+  border-bottom: 2px solid transparent; margin-bottom: -2px; transition: color .15s, border-color .15s;
+}
+.tab:hover { color: var(--ink, #1f2430); }
+.tab.active { color: var(--tc-orange, #ff5a1f); border-bottom-color: var(--tc-orange, #ff5a1f); }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; animation: fadeIn .25s; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ─── Modais ─── */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(31,36,48,.5);
+  display: none; align-items: flex-start; justify-content: center;
+  z-index: 1000; padding: 40px 20px; overflow-y: auto;
+}
+.modal-overlay.show { display: flex; }
+.modal {
+  background: #fff; border-radius: 16px; padding: 28px;
+  width: 100%; max-width: 560px; box-shadow: 0 20px 60px rgba(0,0,0,.3);
+  animation: modalIn .25s var(--ease, ease);
+}
+@keyframes modalIn { from { opacity: 0; transform: translateY(20px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+.modal h3 { font-size: 18px; font-weight: 700; margin-bottom: 16px; }
+.form-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+
+/* ─── Botões extras ─── */
+.btn-xs { height: 30px; padding: 0 10px; font-size: 12px; display: inline-flex; align-items: center; gap: 5px; }
+.btn-xs svg { width: 13px; height: 13px; }
+
+/* ─── Busca inline ─── */
+.search-inline {
+  height: 38px; padding: 0 14px; border: 1.5px solid var(--line-strong, #e2e6ec);
+  border-radius: 9px; font-family: inherit; font-size: 13.5px; min-width: 240px;
+}
+.search-inline:focus { outline: none; border-color: var(--tc-orange, #ff5a1f); box-shadow: 0 0 0 4px rgba(255,90,31,.12); }
+
+/* ─── Hints e alertas ─── */
+.hint { font-size: 12.5px; color: var(--muted, #8b93a4); margin-bottom: 14px; font-style: italic; }
+.alert-box {
+  background: #fff4ef; border: 1px solid #ffd4c2; color: #d83e0a;
+  padding: 16px 20px; border-radius: 12px; font-size: 14px; font-weight: 500; margin-bottom: 20px;
+}
+.empty { text-align: center; color: var(--muted, #8b93a4); padding: 24px; font-style: italic; }
+code { background: #f4f6f9; padding: 2px 6px; border-radius: 5px; font-size: 12.5px; color: #1f2430; }
+
+/* ─── Checkbox em formulário ─── */
+.checkbox-field { flex-direction: row !important; align-items: center; gap: 10px; }
+.checkbox-field input { width: 18px; height: 18px; accent-color: var(--tc-orange, #ff5a1f); }
+
+/* ─── Preview de imagens (upload) ─── */
+.img-preview { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.img-thumb { background: #f4f6f9; border: 1px solid var(--line, #eef0f4); border-radius: 8px; padding: 8px 12px; font-size: 12.5px; }
+
+/* =============================================================================
+   RESPONSIVIDADE COMPLETA (mobile-first reforço)
+   ============================================================================= */
+
+/* Tablets e telas médias */
+@media (max-width: 1024px) {
+  .kpi-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  .report-grid { grid-template-columns: repeat(2, 1fr); }
+  .page-head { flex-wrap: wrap; gap: 14px; }
+  .head-actions { width: 100%; }
+}
+
+/* Telas pequenas / celular */
+@media (max-width: 760px) {
+  .content { padding: 16px; }
+  .page-head h1 { font-size: 22px; }
+  .kpi-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  .report-grid { grid-template-columns: 1fr; }
+
+  /* Formulários: 2 colunas → 1 coluna */
+  .form-grid { grid-template-columns: 1fr; }
+
+  /* Tabelas com rolagem horizontal */
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .table-wrap table { min-width: 640px; }
+
+  /* Abas roláveis */
+  .tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; white-space: nowrap; }
+  .tab { flex-shrink: 0; }
+
+  /* Modal ocupa quase a tela */
+  .modal { max-width: 100%; padding: 22px; }
+  .form-actions { flex-direction: column-reverse; }
+  .form-actions .btn { width: 100%; justify-content: center; }
+
+  /* Busca inline full width */
+  .search-inline { min-width: 0; width: 100%; }
+  .card-head { flex-wrap: wrap; gap: 10px; }
+
+  /* Filtros do header empilham */
+  .head-actions { flex-direction: column; align-items: stretch; }
+  .head-actions .btn, .head-actions .select-filter { width: 100%; }
+}
+
+/* Celulares pequenos */
+@media (max-width: 480px) {
+  .kpi-grid { grid-template-columns: 1fr !important; }
+  .pipeline { grid-template-columns: 1fr !important; }
+  .topbar-user .u-name, .topbar-user .u-role { display: none; }
+  .topbar-search input { font-size: 13px; }
+  .page-head p { font-size: 13px; }
+}

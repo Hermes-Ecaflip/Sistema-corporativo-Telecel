@@ -20,6 +20,7 @@ const TC_LOGO = `
  * Ícones (Lucide-style, traçado)
  * ------------------------------------------------------------------------- */
 const ICONS = {
+  stock: '<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>',
   dashboard: '<path d="M3 3h7v9H3zM14 3h7v5h-7zM14 12h7v9h-7zM3 16h7v5H3z"/>',
   clients: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
   sales: '<path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4zM3 6h18M16 10a4 4 0 0 1-8 0"/>',
@@ -52,6 +53,7 @@ const NAV = [
   { id: 'dashboard',  label: 'Dashboard',    icon: 'dashboard',   href: 'dashboard.html' },
   { id: 'clients',    label: 'Clientes',     icon: 'clients',     href: 'clientes.html' },
   { id: 'sales',      label: 'Vendas',       icon: 'sales',       href: 'vendas.html' },
+  { id: 'stock',      label: 'Estoque',      icon: 'stock',       href: 'estoque.html' },
   { id: 'commissions',label: 'Comissões',    icon: 'commissions', href: 'comissoes.html' },
   { id: 'financial',  label: 'Financeiro',   icon: 'financial',   href: 'financeiro.html' },
   { id: 'reports',    label: 'Relatórios',   icon: 'reports',     href: 'relatorios.html' },
@@ -151,6 +153,9 @@ const TC = {
     const n = series[0].data.length;
     const xStep = iw / (n - 1);
     const yScale = (v) => pad.t + ih - ((v - min) / (max - min)) * ih;
+    const labels = opts.labels || [];
+    const isCurrency = opts.currency !== false;
+    const fmt = (v) => (isCurrency ? 'R$ ' + v.toLocaleString('pt-BR') : v.toLocaleString('pt-BR'));
 
     let grid = '';
     for (let i = 0; i <= 4; i++) {
@@ -173,14 +178,54 @@ const TC = {
         </linearGradient></defs>
         ${s.fill !== false ? `<path d="${area}" fill="url(#${gid})"/>` : ''}
         <path d="${line}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-        ${s.data.map((v, i) => `<circle cx="${pad.l + i * xStep}" cy="${yScale(v)}" r="3" fill="#fff" stroke="${color}" stroke-width="2"/>`).join('')}`;
+        ${s.data.map((v, i) => `<circle class="pt" data-i="${i}" cx="${pad.l + i * xStep}" cy="${yScale(v)}" r="3" fill="#fff" stroke="${color}" stroke-width="2"/>`).join('')}`;
     }).join('');
 
-    const labels = (opts.labels || []).map((l, i) =>
+    const labelEls = labels.map((l, i) =>
       `<text x="${pad.l + i * xStep}" y="${h - 6}" text-anchor="middle" font-size="10" fill="#8b93a4">${l}</text>`
     ).join('');
 
-    el.innerHTML = `<svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}">${grid}${paths}${labels}</svg>`;
+    // Linha-guia vertical + zonas de hover invisíveis (uma por ponto)
+    const guide = `<line id="guide" x1="0" y1="${pad.t}" x2="0" y2="${pad.t + ih}" stroke="#ff5a1f" stroke-width="1" stroke-dasharray="4 3" style="opacity:0"/>`;
+    const hoverZones = Array.from({ length: n }, (_, i) =>
+      `<rect class="hz" data-i="${i}" x="${pad.l + i * xStep - xStep / 2}" y="${pad.t}" width="${xStep}" height="${ih}" fill="transparent" style="cursor:crosshair"/>`
+    ).join('');
+
+    el.style.position = 'relative';
+    el.innerHTML =
+      `<svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}" preserveAspectRatio="xMidYMid meet">${grid}${paths}${labelEls}${guide}${hoverZones}</svg>` +
+      `<div class="chart-tooltip" style="opacity:0"></div>`;
+
+    // Interatividade
+    const svg = el.querySelector('svg');
+    const tip = el.querySelector('.chart-tooltip');
+    const guideLine = el.querySelector('#guide');
+    el.querySelectorAll('.hz').forEach((zone) => {
+      zone.addEventListener('mouseenter', () => {
+        const i = +zone.dataset.i;
+        const x = pad.l + i * xStep;
+        guideLine.setAttribute('x1', x);
+        guideLine.setAttribute('x2', x);
+        guideLine.style.opacity = '1';
+        el.querySelectorAll('.pt').forEach((p) => {
+          p.setAttribute('r', +p.dataset.i === i ? '5' : '3');
+        });
+        const rows = series.map((s) =>
+          `<div class="tt-row"><span class="tt-dot" style="background:${s.color || '#ff5a1f'}"></span>${s.name || 'Série'}: <strong>${fmt(s.data[i])}</strong></div>`
+        ).join('');
+        tip.innerHTML = `<div class="tt-title">${labels[i] || 'Ponto ' + (i + 1)}</div>${rows}`;
+        // posicionar tooltip (em % relativo ao container)
+        const xpct = (x / w) * 100;
+        tip.style.left = xpct + '%';
+        tip.style.opacity = '1';
+        tip.style.transform = 'translateX(' + (xpct > 70 ? '-100%' : '-50%') + ')';
+      });
+      zone.addEventListener('mouseleave', () => {
+        guideLine.style.opacity = '0';
+        tip.style.opacity = '0';
+        el.querySelectorAll('.pt').forEach((p) => p.setAttribute('r', '3'));
+      });
+    });
   },
 
   /* -------------------------------------------------------------------------
@@ -206,10 +251,31 @@ const TC = {
       const bh = (d.value / max) * ih;
       const x = pad.l + gap * i + (gap - bw) / 2;
       const y = pad.t + ih - bh;
-      return `<rect x="${x}" y="${y}" width="${bw}" height="${bh}" rx="4" fill="${d.color || '#ff5a1f'}"/>
+      return `<rect class="bar" data-i="${i}" x="${x}" y="${y}" width="${bw}" height="${bh}" rx="4" fill="${d.color || '#ff5a1f'}" style="cursor:pointer;transition:opacity .15s"/>
               <text x="${x + bw/2}" y="${h - 6}" text-anchor="middle" font-size="10" fill="#8b93a4">${d.label}</text>`;
     }).join('');
-    el.innerHTML = `<svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}">${grid}${bars}</svg>`;
+    el.style.position = 'relative';
+    el.innerHTML = `<svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}">${grid}${bars}</svg><div class="chart-tooltip" style="opacity:0"></div>`;
+
+    const tip = el.querySelector('.chart-tooltip');
+    const isCurrency = opts.currency === true;
+    const fmt = (v) => (isCurrency ? 'R$ ' + v.toLocaleString('pt-BR') : v.toLocaleString('pt-BR'));
+    el.querySelectorAll('.bar').forEach((bar) => {
+      bar.addEventListener('mouseenter', () => {
+        const d = data[+bar.dataset.i];
+        el.querySelectorAll('.bar').forEach((b) => (b.style.opacity = '0.45'));
+        bar.style.opacity = '1';
+        tip.innerHTML = `<div class="tt-row"><strong>${d.label}</strong>: ${fmt(d.value)}</div>`;
+        const xpct = ((pad.l + gap * (+bar.dataset.i) + gap / 2) / w) * 100;
+        tip.style.left = xpct + '%';
+        tip.style.transform = 'translateX(-50%)';
+        tip.style.opacity = '1';
+      });
+      bar.addEventListener('mouseleave', () => {
+        el.querySelectorAll('.bar').forEach((b) => (b.style.opacity = '1'));
+        tip.style.opacity = '0';
+      });
+    });
   },
 
   /* -------------------------------------------------------------------------
@@ -222,23 +288,46 @@ const TC = {
     const radius = r - stroke / 2;
     const circ = 2 * Math.PI * radius;
     const total = segments.reduce((s, x) => s + x.value, 0);
+    const isCurrency = opts.currency === true;
+    const fmt = (v) => (isCurrency ? 'R$ ' + v.toLocaleString('pt-BR') : v.toLocaleString('pt-BR'));
     let offset = 0;
-    const arcs = segments.map((seg) => {
+    const arcs = segments.map((seg, idx) => {
       const frac = seg.value / total;
       const len = frac * circ;
       const dash = `${len} ${circ - len}`;
-      const el = `<circle cx="${r}" cy="${r}" r="${radius}" fill="none" stroke="${seg.color}" stroke-width="${stroke}" stroke-dasharray="${dash}" stroke-dashoffset="${-offset}" transform="rotate(-90 ${r} ${r})" stroke-linecap="butt"/>`;
+      const arc = `<circle class="seg" data-i="${idx}" cx="${r}" cy="${r}" r="${radius}" fill="none" stroke="${seg.color}" stroke-width="${stroke}" stroke-dasharray="${dash}" stroke-dashoffset="${-offset}" transform="rotate(-90 ${r} ${r})" stroke-linecap="butt" style="cursor:pointer;transition:stroke-width .15s"/>`;
       offset += len;
-      return el;
+      return arc;
     }).join('');
+    el.style.position = 'relative';
     el.innerHTML = `
-      <div class="donut-wrap">
+      <div class="donut-wrap" style="position:relative">
         <svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}">
           <circle cx="${r}" cy="${r}" r="${radius}" fill="none" stroke="#f0f2f5" stroke-width="${stroke}"/>
           ${arcs}
         </svg>
         ${opts.center ? `<div class="donut-center"><div class="big">${opts.center.value}</div><div class="lbl">${opts.center.label}</div></div>` : ''}
+        <div class="chart-tooltip donut-tip" style="opacity:0"></div>
       </div>`;
+
+    const tip = el.querySelector('.donut-tip');
+    const centerEl = el.querySelector('.donut-center');
+    el.querySelectorAll('.seg').forEach((arc) => {
+      arc.addEventListener('mouseenter', () => {
+        const i = +arc.dataset.i;
+        const seg = segments[i];
+        const pct = ((seg.value / total) * 100).toFixed(1);
+        arc.setAttribute('stroke-width', stroke + 6);
+        if (centerEl) centerEl.style.opacity = '0';
+        tip.innerHTML = `<div class="tt-row"><span class="tt-dot" style="background:${seg.color}"></span>${seg.label || seg.name}: <strong>${fmt(seg.value)}</strong> (${pct}%)</div>`;
+        tip.style.opacity = '1';
+      });
+      arc.addEventListener('mouseleave', () => {
+        arc.setAttribute('stroke-width', stroke);
+        if (centerEl) centerEl.style.opacity = '1';
+        tip.style.opacity = '0';
+      });
+    });
   },
 
   /* gauge semicircular (meta) */

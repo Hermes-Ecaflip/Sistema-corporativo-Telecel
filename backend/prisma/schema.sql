@@ -10,7 +10,7 @@
 -- ─────────────────────────────────────────────────────────────────────────
 -- ENUMS
 -- ─────────────────────────────────────────────────────────────────────────
-CREATE TYPE "UserRole"            AS ENUM ('ADMIN','SUPERVISOR','VENDEDOR','FINANCEIRO','AUDITOR');
+CREATE TYPE "UserRole"            AS ENUM ('ADMIN','GERENTE','SUPERVISOR','VENDEDOR','ESTOQUISTA','RH','FINANCEIRO','AUDITOR');
 CREATE TYPE "UserStatus"          AS ENUM ('ACTIVE','INACTIVE','SUSPENDED','PENDING_VERIFICATION');
 CREATE TYPE "PersonType"          AS ENUM ('PF','PJ');
 CREATE TYPE "ClientStatus"        AS ENUM ('ACTIVE','INACTIVE','BLOCKED','FRAUD_SUSPECT');
@@ -29,6 +29,11 @@ CREATE TYPE "GoalType"            AS ENUM ('REVENUE','SALES_COUNT');
 CREATE TYPE "FinancialCloseStatus" AS ENUM ('OPEN','CLOSED','REOPENED');
 CREATE TYPE "MovementType"        AS ENUM ('INCOME','EXPENSE');
 CREATE TYPE "StoreBrand"          AS ENUM ('TIM','MOTOROLA','SAMSUNG');
+CREATE TYPE "Sector"              AS ENUM ('VENDAS','ESTOQUE','RH','FINANCEIRO','GERENCIA');
+CREATE TYPE "StockStatus"         AS ENUM ('AVAILABLE','RESERVED','SOLD','TRANSFERRED','DAMAGED','IN_TRANSIT');
+CREATE TYPE "TransferStatus"      AS ENUM ('PENDING','IN_TRANSIT','COMPLETED','CANCELLED');
+CREATE TYPE "DamageSeverity"      AS ENUM ('MINOR','MODERATE','SEVERE','TOTAL');
+CREATE TYPE "DamageStatus"        AS ENUM ('REPORTED','IN_REVIEW','RESOLVED','WRITTEN_OFF');
 
 -- ─────────────────────────────────────────────────────────────────────────
 -- EMPRESAS E LOJAS (multi-tenant)
@@ -76,6 +81,7 @@ CREATE TABLE "users" (
   "cpf"                      VARCHAR(14),
   "password"                 VARCHAR(255) NOT NULL,
   "role"                     "UserRole" DEFAULT 'VENDEDOR',
+  "sector"                   "Sector" DEFAULT 'VENDAS',
   "status"                   "UserStatus" DEFAULT 'ACTIVE',
   "avatar_url"               TEXT,
   "birth_date"               DATE,
@@ -373,3 +379,92 @@ CREATE INDEX ON "refresh_tokens"("user_id");
 -- FIM — 18 tabelas, 18 enums
 -- Fonte da verdade: backend/prisma/schema.prisma
 -- =============================================================================
+
+
+-- ─────────────────────────────────────────────────────────────────────────
+-- ESTOQUE (itens com IMEI/código de barras)
+-- ─────────────────────────────────────────────────────────────────────────
+CREATE TABLE "stock_items" (
+  "id"            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  "company_id"    UUID NOT NULL REFERENCES "companies"("id"),
+  "store_id"      UUID NOT NULL REFERENCES "stores"("id"),
+  "product_id"    UUID NOT NULL REFERENCES "products"("id"),
+  "imei"          VARCHAR(20) UNIQUE,
+  "barcode"       VARCHAR(60),
+  "serial_number" VARCHAR(60),
+  "brand"         "StoreBrand" NOT NULL,
+  "status"        "StockStatus" DEFAULT 'AVAILABLE',
+  "cost_price"    DECIMAL(10,2),
+  "notes"         TEXT,
+  "deleted_at"    TIMESTAMP,
+  "created_at"    TIMESTAMP DEFAULT now(),
+  "updated_at"    TIMESTAMP DEFAULT now()
+);
+CREATE INDEX ON "stock_items"("company_id");
+CREATE INDEX ON "stock_items"("store_id");
+CREATE INDEX ON "stock_items"("imei");
+CREATE INDEX ON "stock_items"("barcode");
+CREATE INDEX ON "stock_items"("status");
+CREATE INDEX ON "stock_items"("brand");
+
+-- ─────────────────────────────────────────────────────────────────────────
+-- TRANSFERÊNCIAS DE ESTOQUE (mesma marca) + itens
+-- ─────────────────────────────────────────────────────────────────────────
+CREATE TABLE "stock_transfers" (
+  "id"                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  "company_id"        UUID NOT NULL REFERENCES "companies"("id"),
+  "transfer_code"     VARCHAR(30) NOT NULL,
+  "from_store_id"     UUID NOT NULL REFERENCES "stores"("id"),
+  "to_store_id"       UUID NOT NULL REFERENCES "stores"("id"),
+  "brand"             "StoreBrand" NOT NULL,
+  "status"            "TransferStatus" DEFAULT 'PENDING',
+  "reason"            TEXT,
+  "requested_by_id"   UUID NOT NULL REFERENCES "users"("id"),
+  "approved_by_id"    UUID REFERENCES "users"("id"),
+  "manager_signature" VARCHAR(200),
+  "document_url"      TEXT,
+  "sent_at"           TIMESTAMP,
+  "received_at"       TIMESTAMP,
+  "created_at"        TIMESTAMP DEFAULT now(),
+  "updated_at"        TIMESTAMP DEFAULT now()
+);
+CREATE INDEX ON "stock_transfers"("company_id");
+CREATE INDEX ON "stock_transfers"("status");
+CREATE INDEX ON "stock_transfers"("brand");
+
+CREATE TABLE "stock_transfer_items" (
+  "id"            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  "transfer_id"   UUID NOT NULL REFERENCES "stock_transfers"("id") ON DELETE CASCADE,
+  "stock_item_id" UUID NOT NULL REFERENCES "stock_items"("id"),
+  UNIQUE ("transfer_id","stock_item_id")
+);
+CREATE INDEX ON "stock_transfer_items"("transfer_id");
+
+-- ─────────────────────────────────────────────────────────────────────────
+-- APARELHOS DANIFICADOS
+-- ─────────────────────────────────────────────────────────────────────────
+CREATE TABLE "damage_reports" (
+  "id"             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  "company_id"     UUID NOT NULL REFERENCES "companies"("id"),
+  "store_id"       UUID NOT NULL REFERENCES "stores"("id"),
+  "stock_item_id"  UUID REFERENCES "stock_items"("id"),
+  "report_code"    VARCHAR(30) NOT NULL,
+  "imei"           VARCHAR(20),
+  "product_name"   VARCHAR(200) NOT NULL,
+  "brand"          "StoreBrand" NOT NULL,
+  "severity"       "DamageSeverity" DEFAULT 'MODERATE',
+  "status"         "DamageStatus" DEFAULT 'REPORTED',
+  "description"    TEXT NOT NULL,
+  "image_urls"     TEXT[],
+  "document_url"   TEXT,
+  "estimated_loss" DECIMAL(10,2),
+  "reported_by_id" UUID NOT NULL REFERENCES "users"("id"),
+  "resolved_by_id" UUID REFERENCES "users"("id"),
+  "resolved_at"    TIMESTAMP,
+  "created_at"     TIMESTAMP DEFAULT now(),
+  "updated_at"     TIMESTAMP DEFAULT now()
+);
+CREATE INDEX ON "damage_reports"("company_id");
+CREATE INDEX ON "damage_reports"("store_id");
+CREATE INDEX ON "damage_reports"("status");
+CREATE INDEX ON "damage_reports"("brand");

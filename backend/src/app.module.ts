@@ -30,6 +30,7 @@ import { FinancialModule } from './financial/financial.module';
 import { ReportsModule } from './reports/reports.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { StockModule } from './stock/stock.module';
 import { UploadsModule } from './uploads/uploads.module';
 import { AuditModule } from './audit/audit.module';
 
@@ -81,6 +82,7 @@ import { LoggerMiddleware } from './common/middleware/logger.middleware';
     ReportsModule,
     NotificationsModule,
     DashboardModule,
+    StockModule,
     UploadsModule,
     AuditModule,
   ],

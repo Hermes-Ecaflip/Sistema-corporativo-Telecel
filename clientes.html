@@ -59,6 +59,17 @@
     document.getElementById('btnExport').innerHTML = tcIcon('download') + ' Exportar';
     document.getElementById('btnNew').innerHTML = tcIcon('plus') + ' Novo Cliente';
     document.getElementById('btnFilter').innerHTML = tcIcon('filter') + ' Filtros';
+
+    // Interações
+    document.getElementById('btnExport').addEventListener('click', function () {
+      (window.tcToast || alert)('Exportando lista de clientes para CSV...', 'success');
+    });
+    document.getElementById('btnNew').addEventListener('click', function () {
+      (window.tcToast || alert)('Abrindo formulário de novo cliente...');
+    });
+    document.getElementById('btnFilter').addEventListener('click', function () {
+      (window.tcToast || alert)('Filtros avançados em breve.');
+    });
     document.getElementById('searchBox').innerHTML = tcIcon('search') + '<input type="text" placeholder="Buscar clientes...">';
 
     const clients = [

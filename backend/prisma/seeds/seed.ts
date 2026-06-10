@@ -5,7 +5,8 @@
 // =============================================================================
 
 import { PrismaClient, UserRole, UserStatus, PersonType, ClientStatus,
-  ProductCategory, ProductStatus, CommissionType, StoreBrand } from '@prisma/client';
+  ProductCategory, ProductStatus, CommissionType, StoreBrand,
+  Sector, StockStatus, DamageSeverity } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
@@ -29,7 +30,7 @@ async function main() {
       cnpj: '12345678000195',
       email: 'contato@telecel.com.br',
       phone: '(11) 3000-0000',
-      partnerCode: 'TIM-TC-001', // Código de parceiro TIM
+      partnerCode: 'TELECEL-001', // Código interno do grupo
     },
   });
   console.log(`   ✓ Empresa: ${company.tradeName}\n`);
@@ -66,11 +67,14 @@ async function main() {
   // ─── 3. USUÁRIOS (um por papel) ──────────────────────────────────────────
   console.log('👤 Criando usuários...');
   const usersData = [
-    { name: 'Administrador TELECEL', email: 'admin@telecel.com.br', role: UserRole.ADMIN, storeId: stores['TIM-PLAN-DF'].id },
-    { name: 'Carlos Supervisor', email: 'supervisor@telecel.com.br', role: UserRole.SUPERVISOR, storeId: stores['TIM-JK-DF'].id },
-    { name: 'Vanessa Vendedora', email: 'vendedor@telecel.com.br', role: UserRole.VENDEDOR, storeId: stores['TIM-PLAN-DF'].id },
-    { name: 'Fernando Financeiro', email: 'financeiro@telecel.com.br', role: UserRole.FINANCEIRO, storeId: stores['MOTO-SP-001'].id },
-    { name: 'Auditoria Interna', email: 'auditor@telecel.com.br', role: UserRole.AUDITOR, storeId: stores['SAM-MG-001'].id },
+    { name: 'Administrador TELECEL', email: 'admin@telecel.com.br', role: UserRole.ADMIN, sector: Sector.GERENCIA, storeId: stores['TIM-PLAN-DF'].id },
+    { name: 'Carlos Gerente', email: 'gerente@telecel.com.br', role: UserRole.GERENTE, sector: Sector.GERENCIA, storeId: stores['TIM-PLAN-DF'].id },
+    { name: 'Paulo Supervisor', email: 'supervisor@telecel.com.br', role: UserRole.SUPERVISOR, sector: Sector.VENDAS, storeId: stores['TIM-JK-DF'].id },
+    { name: 'Vanessa Vendedora', email: 'vendedor@telecel.com.br', role: UserRole.VENDEDOR, sector: Sector.VENDAS, storeId: stores['TIM-PLAN-DF'].id },
+    { name: 'Rafael Estoquista', email: 'estoque@telecel.com.br', role: UserRole.ESTOQUISTA, sector: Sector.ESTOQUE, storeId: stores['TIM-PLAN-DF'].id },
+    { name: 'Juliana RH', email: 'rh@telecel.com.br', role: UserRole.RH, sector: Sector.RH, storeId: stores['MOTO-SP-001'].id },
+    { name: 'Fernando Financeiro', email: 'financeiro@telecel.com.br', role: UserRole.FINANCEIRO, sector: Sector.FINANCEIRO, storeId: stores['MOTO-SP-001'].id },
+    { name: 'Auditoria Interna', email: 'auditor@telecel.com.br', role: UserRole.AUDITOR, sector: Sector.GERENCIA, storeId: stores['SAM-MG-001'].id },
   ];
 
   const users: Record<string, any> = {};
@@ -86,6 +90,7 @@ async function main() {
         phone: '(11) 99999-0000',
         password: hashedPassword,
         role: u.role,
+        sector: u.sector,
         status: UserStatus.ACTIVE,
       },
     });
@@ -189,7 +194,76 @@ async function main() {
   }
   console.log('');
 
-  // ─── 6. METAS DO MÊS ATUAL ───────────────────────────────────────────────
+  // ─── 6. ESTOQUE (itens com IMEI/código de barras) ───────────────────────
+  console.log('📦 Criando itens de estoque...');
+  // Aparelhos para estoque: pegar produtos da categoria APARELHO
+  const devices = products.filter((p) => p.category === ProductCategory.APARELHO);
+  const stockItemsData = [
+    { product: devices[0], store: stores['MOTO-SP-001'], brand: StoreBrand.MOTOROLA, imei: '356938035643809', barcode: '7891234567890', cost: 3800 },
+    { product: devices[0], store: stores['MOTO-SP-001'], brand: StoreBrand.MOTOROLA, imei: '356938035643810', barcode: '7891234567890', cost: 3800 },
+    { product: devices[1] ?? devices[0], store: stores['MOTO-RJ-001'], brand: StoreBrand.MOTOROLA, imei: '356938035643811', barcode: '7891234567891', cost: 1600 },
+    { product: devices[2] ?? devices[0], store: stores['SAM-MG-001'], brand: StoreBrand.SAMSUNG, imei: '356938035643812', barcode: '7891234567892', cost: 6800 },
+    { product: devices[3] ?? devices[0], store: stores['SAM-DF-001'], brand: StoreBrand.SAMSUNG, imei: '356938035643813', barcode: '7891234567893', cost: 2400 },
+  ].filter((s) => s.product);
+
+  const stockItems: any[] = [];
+  for (const s of stockItemsData) {
+    const item = await prisma.stockItem.create({
+      data: {
+        companyId: company.id,
+        productId: s.product.id,
+        storeId: s.store.id,
+        brand: s.brand,
+        imei: s.imei,
+        barcode: s.barcode,
+        costPrice: s.cost,
+        status: StockStatus.AVAILABLE,
+      },
+    });
+    stockItems.push(item);
+    console.log(`   ✓ [${s.brand}] ${s.product.name} — IMEI ${s.imei}`);
+  }
+  console.log('');
+
+  // ─── 7. TRANSFERÊNCIA DE EXEMPLO (Motorola SP → Motorola RJ) ─────────────
+  console.log('🔄 Criando transferência de exemplo...');
+  const movedItem = stockItems.find((i) => i.brand === StoreBrand.MOTOROLA);
+  if (movedItem) {
+    const transfer = await prisma.stockTransfer.create({
+      data: {
+        companyId: company.id,
+        transferCode: `TRF-${new Date().getFullYear()}-0001`,
+        fromStoreId: stores['MOTO-SP-001'].id,
+        toStoreId: stores['MOTO-RJ-001'].id,
+        brand: StoreBrand.MOTOROLA,
+        reason: 'Reposição de estoque na unidade Barra.',
+        requestedById: users[UserRole.ESTOQUISTA].id,
+        status: 'PENDING',
+        items: { create: [{ stockItemId: movedItem.id }] },
+      },
+    });
+    await prisma.stockItem.update({ where: { id: movedItem.id }, data: { status: StockStatus.IN_TRANSIT } });
+    console.log(`   ✓ ${transfer.transferCode}: Motorola Paulista → Motorola Barra`);
+  }
+  console.log('');
+
+  // ─── 8. APARELHO DANIFICADO DE EXEMPLO ───────────────────────────────────
+  console.log('⚠️  Criando registro de dano de exemplo...');
+  await prisma.damageReport.create({
+    data: {
+      companyId: company.id,
+      storeId: stores['SAM-MG-001'].id,
+      reportCode: `DAN-${new Date().getFullYear()}-0001`,
+      productName: 'Samsung Galaxy S24 Ultra',
+      brand: StoreBrand.SAMSUNG,
+      severity: DamageSeverity.MODERATE,
+      description: 'Tela trincada no canto inferior direito após queda durante manuseio no balcão.',
+      imageUrls: ['uploads/damage/exemplo-tela-trincada.jpg'],
+      estimatedLoss: 1200,
+      reportedById: users[UserRole.ESTOQUISTA].id,
+    },
+  });
+  console.log('   ✓ DAN registrado (Samsung Galaxy S24 Ultra)\n');
   console.log('🎯 Criando metas...');
   const currentMonth = new Date().toISOString().slice(0, 7);
   await prisma.goal.create({
