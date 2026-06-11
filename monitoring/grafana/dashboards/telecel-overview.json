@@ -1,0 +1,65 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "graphTooltip": 0,
+  "title": "TELECEL — Visão Geral do Sistema",
+  "uid": "telecel-overview",
+  "tags": ["telecel"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "time": { "from": "now-6h", "to": "now" },
+  "refresh": "30s",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Requisições HTTP por segundo",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        { "expr": "rate(http_requests_total{service=\"api\"}[1m])", "legendFormat": "{{method}} {{route}}" }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Latência média (p95)",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        { "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))", "legendFormat": "p95" }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Erros HTTP 5xx",
+      "type": "stat",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 6, "w": 8, "x": 0, "y": 8 },
+      "targets": [
+        { "expr": "sum(rate(http_requests_total{status=~\"5..\"}[5m]))", "legendFormat": "5xx" }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Uso de memória do backend",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 6, "w": 8, "x": 8, "y": 8 },
+      "targets": [
+        { "expr": "process_resident_memory_bytes{service=\"api\"}", "legendFormat": "RSS" }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Conexões ativas",
+      "type": "stat",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 6, "w": 8, "x": 16, "y": 8 },
+      "targets": [
+        { "expr": "nodejs_active_handles_total{service=\"api\"}", "legendFormat": "handles" }
+      ]
+    }
+  ]
+}

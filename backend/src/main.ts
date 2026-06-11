@@ -195,11 +195,7 @@ async function bootstrap(): Promise<void> {
     logger.log(`📚 Swagger disponível em: http://localhost:${port}/api/docs`);
   }
 
-  // ─── Health check básico ───────────────────────────────────────────────────
-  // Endpoint dedicado em HealthModule — este é apenas para o Docker healthcheck
-  app.getHttpAdapter().get('/health', (_req, res) => {
-    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
-  });
+  // ─── Health check e métricas: ver HealthModule (/health e /api/v1/metrics) ───
 
   // ─── Inicialização ─────────────────────────────────────────────────────────
   await app.listen(port, '0.0.0.0');

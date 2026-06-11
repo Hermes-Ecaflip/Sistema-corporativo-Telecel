@@ -23,7 +23,7 @@ Desenvolvido para o **Grupo TELECEL** — gestão integrada de varejo multimarca
 
 <br/>
 
-[![Backend](https://img.shields.io/badge/Backend-14%20Módulos%20✅-28a745?style=flat-square)]()
+[![Backend](https://img.shields.io/badge/Backend-15%20Módulos%20✅-28a745?style=flat-square)]()
 [![Frontend](https://img.shields.io/badge/Frontend-13%20Telas%20✅-28a745?style=flat-square)]()
 [![Database](https://img.shields.io/badge/Database-21%20Models%20%7C%2022%20Enums-4169E1?style=flat-square)]()
 [![API](https://img.shields.io/badge/API-85%2B%20Endpoints-FF5A1F?style=flat-square)]()
@@ -483,7 +483,7 @@ Cada **loja** tem uma marca (`StoreBrand`: TIM · MOTOROLA · SAMSUNG), localiza
 | 3 | **Autenticação** | JWT + 2FA TOTP · Refresh Rotation · Brute Force · AES-256-GCM |
 | 4 | **Usuários + Uploads** | CRUD · RBAC · Avatar S3 (Sharp/WebP) · CSV export |
 | 5 | **Clientes** | CPF/CNPJ algorítmico · Score anti-fraude 0-100 · Busca avançada |
-| 6 | **Produtos** | Catálogo TIM · Regras de comissão (% ou fixo) · Fidelização |
+| 6 | **Produtos** | Catálogo multimarca (TIM/Motorola/Samsung) · Regras de comissão (% ou fixo) · Fidelização |
 | 7 | **Vendas** | Criação transacional · Comissão automática · Workflow aprovação |
 | 8 | **Comissões** | Aprovação/pagamento em lote · Fechamento mensal · Resumo por vendedor |
 | 9 | **Financeiro** | Fechamento consolidado · Balanço prévio · Movimentos manuais |
@@ -492,6 +492,7 @@ Cada **loja** tem uma marca (`StoreBrand`: TIM · MOTOROLA · SAMSUNG), localiza
 | 12 | **Dashboard** | KPIs por papel · Ranking · Tendência diária · Metas com progresso |
 | 13 | **Seeds & Migrations** | Dados iniciais · app.module.ts · Guia de migrations |
 | 14 | **Estoque** | Itens por IMEI/código de barras · Transferência entre lojas (mesma marca) com PDF assinado · Aparelhos danificados com upload de imagem e PDF |
+| 15 | **Health & Métricas** | `/health` com checagem de banco · `/api/v1/metrics` no formato Prometheus · Grafana provisionado |
 
 ### ✅ Frontend (9 telas)
 
@@ -523,7 +524,7 @@ Cada **loja** tem uma marca (`StoreBrand`: TIM · MOTOROLA · SAMSUNG), localiza
 | 3 | Autenticação (JWT, 2FA, Brute Force) | ✅ |
 | 4 | Usuários + Uploads (CRUD, S3, avatar) | ✅ |
 | 5 | Clientes (CPF/CNPJ, anti-fraude) | ✅ |
-| 6 | Produtos (catálogo TIM) | ✅ |
+| 6 | Produtos (catálogo multimarca) | ✅ |
 | 7 | Vendas (workflow de aprovação) | ✅ |
 | 8 | Comissões (cálculo automático) | ✅ |
 | 9 | Financeiro (fechamento mensal) | ✅ |
@@ -536,18 +537,20 @@ Cada **loja** tem uma marca (`StoreBrand`: TIM · MOTOROLA · SAMSUNG), localiza
 | 16 | Frontend — Clientes + Vendas | ✅ |
 | 17 | Frontend — Financeiro + Comissões | ✅ |
 | 18 | Frontend — Auditoria + Usuários | ✅ |
+| 18b | Frontend — Estoque + Cadastro de Usuário | ✅ |
+| 18c | Frontend — Relatórios + Configurações + Suporte | ✅ |
 | 19 | Testes (unitários, E2E) | ✅ |
 | 20 | Nginx + SSL | ✅ |
 | 21 | CI/CD GitHub Actions | ✅ |
 | 22 | Deploy VPS Ubuntu | ✅ (guia) |
-| 23 | Grafana Dashboards | ⏳ |
+| 23 | Grafana Dashboards | ✅ |
 
 ---
 
 ## 🧪 Testes
 
 ```bash
-npm test            # Unitários (15 testes — CPF/CNPJ + DashboardService)
+npm test            # Unitários (24 testes — CPF/CNPJ + Dashboard + Stock)
 npm run test:cov    # Cobertura
 npm run test:e2e    # E2E (fluxo de autenticação — requer banco de teste)
 ```
