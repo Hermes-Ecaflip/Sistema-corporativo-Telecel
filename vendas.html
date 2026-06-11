@@ -44,13 +44,16 @@
     </div>
 
     <div class="pipeline" id="pipeline"></div>
+
+    <!-- Modal de nova venda -->
+    <div class="modal-overlay" id="modalOverlay"></div>
   </div>
 
   <script src="assets/js/shell.js"></script>
   <script>
     TC.mountShell('sales');
     document.getElementById('btnNew').innerHTML = tcIcon('plus') + ' Nova Venda';
-    document.getElementById('btnNew').addEventListener('click', function () { (window.tcToast||alert)('Abrindo formulário de nova venda...'); });
+    document.getElementById('btnNew').addEventListener('click', openNewSale);
 
     const columns = [
       { title: 'Criada', dot: '#8b93a4', count: 15, total: 'R$ 275.460,00', more: 12, cards: [
@@ -71,23 +74,87 @@
       ]},
     ];
 
-    document.getElementById('pipeline').innerHTML = columns.map(col => `
-      <div class="pipe-col">
-        <div class="pipe-head">
-          <div class="pt"><span class="pipe-dot" style="background:${col.dot}"></span>${col.title}</div>
-          <div class="pm">${col.count} vendas · ${col.total}</div>
-        </div>
-        <div class="pipe-body">
-          ${col.cards.map(c => `
-            <div class="pipe-card">
-              <div class="pc-id">${c.id}</div>
-              <div class="pc-name">${c.name}</div>
-              <div class="pc-val">${c.val}</div>
-              <div class="pc-date">${c.date}</div>
-            </div>`).join('')}
-          <div class="pipe-more">+ ${col.more} mais</div>
-        </div>
-      </div>`).join('');
+    function renderPipeline() {
+      document.getElementById('pipeline').innerHTML = columns.map(col => `
+        <div class="pipe-col">
+          <div class="pipe-head">
+            <div class="pt"><span class="pipe-dot" style="background:${col.dot}"></span>${col.title}</div>
+            <div class="pm">${col.count} vendas · ${col.total}</div>
+          </div>
+          <div class="pipe-body">
+            ${col.cards.map(c => `
+              <div class="pipe-card">
+                <div class="pc-id">${c.id}</div>
+                <div class="pc-name">${c.name}</div>
+                <div class="pc-val">${c.val}</div>
+                <div class="pc-date">${c.date}</div>
+              </div>`).join('')}
+            <div class="pipe-more">+ ${col.more} mais</div>
+          </div>
+        </div>`).join('');
+    }
+    renderPipeline();
+
+    // ════════════════ FORMULÁRIO DE NOVA VENDA ════════════════
+    var overlay = document.getElementById('modalOverlay');
+    function closeModal() { overlay.classList.remove('show'); overlay.innerHTML = ''; }
+    overlay.addEventListener('click', function (e) { if (e.target === overlay) closeModal(); });
+
+    var PRODUCTS = [
+      { name: 'TIM Black 100GB', price: 129.90 },
+      { name: 'TIM Controle 25GB', price: 49.90 },
+      { name: 'Motorola Edge 50 Ultra', price: 4499.00 },
+      { name: 'Motorola Moto G84 5G', price: 1899.00 },
+      { name: 'Samsung Galaxy S24 Ultra', price: 7999.00 },
+      { name: 'Samsung Galaxy A55 5G', price: 2799.00 },
+    ];
+    var STORES_SALE = ['TIM Planaltina — DF', 'TIM JK Shopping — DF', 'TIM Corumbá — MS',
+      'Motorola Paulista — SP', 'Motorola Barra — RJ', 'Samsung BH Shopping — MG', 'Samsung Brasília — DF'];
+
+    function brl(v) { return 'R$ ' + v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+
+    function openNewSale() {
+      overlay.innerHTML = '<div class="modal">' +
+        '<h3>Nova Venda</h3>' +
+        '<div class="form-grid">' +
+          '<label class="full">Cliente *<input id="s-client" placeholder="Nome do cliente" /></label>' +
+          '<label>Loja *<select id="s-store">' + STORES_SALE.map(function (s) { return '<option>' + s + '</option>'; }).join('') + '</select></label>' +
+          '<label>Produto *<select id="s-product">' + PRODUCTS.map(function (p, i) { return '<option value="' + i + '">' + p.name + '</option>'; }).join('') + '</select></label>' +
+          '<label>Quantidade *<input id="s-qty" type="number" value="1" min="1" /></label>' +
+          '<label>Forma de pagamento<select id="s-pay"><option>À vista</option><option>Cartão de crédito</option><option>Boleto</option><option>PIX</option></select></label>' +
+          '<label class="full">Valor total<input id="s-total" readonly /></label>' +
+        '</div>' +
+        '<div class="form-actions"><button class="btn" id="s-cancel">Cancelar</button><button class="btn btn-primary" id="s-save">Registrar venda</button></div>' +
+      '</div>';
+      overlay.classList.add('show');
+
+      function recalc() {
+        var p = PRODUCTS[+document.getElementById('s-product').value];
+        var qty = parseInt(document.getElementById('s-qty').value) || 1;
+        document.getElementById('s-total').value = brl(p.price * qty);
+      }
+      document.getElementById('s-product').addEventListener('change', recalc);
+      document.getElementById('s-qty').addEventListener('input', recalc);
+      recalc();
+
+      document.getElementById('s-cancel').addEventListener('click', closeModal);
+      document.getElementById('s-save').addEventListener('click', function () {
+        var client = document.getElementById('s-client').value.trim();
+        var p = PRODUCTS[+document.getElementById('s-product').value];
+        var qty = parseInt(document.getElementById('s-qty').value) || 1;
+        if (!client) { (window.tcToast||alert)('Informe o cliente.', 'error'); return; }
+
+        // No sistema real: POST /api/v1/sales { clientId, storeId, items: [{ productId, quantity }], ... }
+        var nextId = '#VDA-' + (1256 + Math.floor(Math.random() * 100));
+        var today = new Date().toLocaleDateString('pt-BR');
+        // adiciona na coluna "Criada"
+        columns[0].cards.unshift({ id: nextId, name: client, val: brl(p.price * qty), date: today });
+        columns[0].count += 1;
+        renderPipeline();
+        closeModal();
+        (window.tcToast||alert)('Venda ' + nextId + ' registrada para ' + client + '.', 'success');
+      });
+    }
   </script>
 </body>
 </html>

@@ -50,6 +50,9 @@
         </div>
       </div>
     </div>
+
+    <!-- Modal de novo cliente -->
+    <div class="modal-overlay" id="modalOverlay"></div>
   </div>
 
   <script src="assets/js/shell.js"></script>
@@ -64,9 +67,7 @@
     document.getElementById('btnExport').addEventListener('click', function () {
       (window.tcToast || alert)('Exportando lista de clientes para CSV...', 'success');
     });
-    document.getElementById('btnNew').addEventListener('click', function () {
-      (window.tcToast || alert)('Abrindo formulário de novo cliente...');
-    });
+    document.getElementById('btnNew').addEventListener('click', openNewClient);
     document.getElementById('btnFilter').addEventListener('click', function () {
       (window.tcToast || alert)('Filtros avançados em breve.');
     });
@@ -114,6 +115,112 @@
           </div>
         </td>
       </tr>`).join('');
+
+    // ════════════════ FORMULÁRIO DE NOVO CLIENTE ════════════════
+    function renderRows() {
+      document.getElementById('rows').innerHTML = clients.map(c => `
+        <tr>
+          <td class="cell-strong">${c.name}</td>
+          <td class="cell-muted">${c.doc}</td>
+          <td>${typeBadge(c.type)}</td>
+          <td>${c.city}</td>
+          <td>
+            <span class="score">
+              <span class="score-bar"><span style="width:${c.score/10}%;background:${scoreColor(c.score)}"></span></span>
+              <span class="score-num" style="color:${scoreColor(c.score)}">${c.score}</span>
+            </span>
+          </td>
+          <td>${statusBadge(c.status)}</td>
+          <td>
+            <div class="row-actions">
+              <button class="act" title="Ver">${tcIcon('eye')}</button>
+              <button class="act" title="Editar">${tcIcon('edit')}</button>
+              <button class="act" title="Mais">${tcIcon('more')}</button>
+            </div>
+          </td>
+        </tr>`).join('');
+    }
+
+    var overlay = document.getElementById('modalOverlay');
+    function closeModal() { overlay.classList.remove('show'); overlay.innerHTML = ''; }
+    overlay.addEventListener('click', function (e) { if (e.target === overlay) closeModal(); });
+
+    // Validação de CPF (dígitos verificadores)
+    function isValidCPF(cpf) {
+      cpf = (cpf || '').replace(/\D/g, '');
+      if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false;
+      var s = 0;
+      for (var i = 0; i < 9; i++) s += parseInt(cpf[i]) * (10 - i);
+      var d1 = 11 - (s % 11); if (d1 >= 10) d1 = 0;
+      if (d1 !== parseInt(cpf[9])) return false;
+      s = 0;
+      for (var j = 0; j < 10; j++) s += parseInt(cpf[j]) * (11 - j);
+      var d2 = 11 - (s % 11); if (d2 >= 10) d2 = 0;
+      return d2 === parseInt(cpf[10]);
+    }
+    // Validação de CNPJ
+    function isValidCNPJ(cnpj) {
+      cnpj = (cnpj || '').replace(/\D/g, '');
+      if (cnpj.length !== 14 || /^(\d)\1{13}$/.test(cnpj)) return false;
+      var calc = function (base) {
+        var nums = cnpj.substring(0, base);
+        var sum = 0, pos = base - 7;
+        for (var i = base; i >= 1; i--) { sum += nums[base - i] * pos--; if (pos < 2) pos = 9; }
+        var r = sum % 11;
+        return r < 2 ? 0 : 11 - r;
+      };
+      return calc(12) === parseInt(cnpj[12]) && calc(13) === parseInt(cnpj[13]);
+    }
+
+    function openNewClient() {
+      overlay.innerHTML = '<div class="modal">' +
+        '<h3>Novo Cliente</h3>' +
+        '<div class="form-grid">' +
+          '<label>Tipo de pessoa *<select id="c-type">' +
+            '<option value="PF">Pessoa Física</option>' +
+            '<option value="PJ">Pessoa Jurídica</option>' +
+          '</select></label>' +
+          '<label id="c-doc-wrap">CPF *<input id="c-doc" placeholder="000.000.000-00" /></label>' +
+          '<label class="full">Nome / Razão Social *<input id="c-name" placeholder="Nome completo" /></label>' +
+          '<label>E-mail<input id="c-email" type="email" placeholder="cliente@email.com" /></label>' +
+          '<label>Telefone<input id="c-phone" placeholder="(00) 00000-0000" /></label>' +
+          '<label>Cidade<input id="c-city" placeholder="São Paulo" /></label>' +
+          '<label>Estado<input id="c-state" placeholder="SP" maxlength="2" /></label>' +
+        '</div>' +
+        '<div class="form-actions"><button class="btn" id="c-cancel">Cancelar</button><button class="btn btn-primary" id="c-save">Cadastrar cliente</button></div>' +
+      '</div>';
+      overlay.classList.add('show');
+
+      // alterna rótulo CPF/CNPJ conforme tipo
+      document.getElementById('c-type').addEventListener('change', function (e) {
+        var isPJ = e.target.value === 'PJ';
+        document.getElementById('c-doc-wrap').childNodes[0].textContent = isPJ ? 'CNPJ *' : 'CPF *';
+        document.getElementById('c-doc').placeholder = isPJ ? '00.000.000/0000-00' : '000.000.000-00';
+      });
+
+      document.getElementById('c-cancel').addEventListener('click', closeModal);
+      document.getElementById('c-save').addEventListener('click', function () {
+        var type = document.getElementById('c-type').value;
+        var name = document.getElementById('c-name').value.trim();
+        var doc = document.getElementById('c-doc').value.trim();
+        var city = document.getElementById('c-city').value.trim();
+        var state = document.getElementById('c-state').value.trim().toUpperCase();
+
+        if (!name) { (window.tcToast||alert)('Informe o nome do cliente.', 'error'); return; }
+        if (type === 'PF' && !isValidCPF(doc)) { (window.tcToast||alert)('CPF inválido.', 'error'); return; }
+        if (type === 'PJ' && !isValidCNPJ(doc)) { (window.tcToast||alert)('CNPJ inválido.', 'error'); return; }
+
+        // No sistema real: POST /api/v1/clients { name, document, personType, city, state, ... }
+        clients.unshift({
+          name: name, doc: doc,
+          type: type === 'PJ' ? 'Pessoa Jurídica' : 'Pessoa Física',
+          city: (city || '—') + (state ? ' - ' + state : ''),
+          score: 0, status: 'Ativo',
+        });
+        closeModal(); renderRows();
+        (window.tcToast||alert)('Cliente "' + name + '" cadastrado com sucesso.', 'success');
+      });
+    }
   </script>
 </body>
 </html>
