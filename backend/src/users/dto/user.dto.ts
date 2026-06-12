@@ -20,7 +20,7 @@ import {
   Max,
 } from 'class-validator';
 import { Transform, Exclude, Expose } from 'class-transformer';
-import { UserRole, UserStatus } from '@prisma/client';
+import { UserRole, UserStatus, Sector } from '@prisma/client';
 
 // =============================================================================
 // CREATE USER DTO
@@ -58,6 +58,11 @@ export class CreateUserDto {
   @ApiProperty({ enum: UserRole, example: UserRole.VENDEDOR })
   @IsEnum(UserRole, { message: `Papel inválido. Válidos: ${Object.values(UserRole).join(', ')}` })
   role: UserRole;
+
+  @ApiPropertyOptional({ enum: Sector, example: Sector.VENDAS, description: 'Setor do funcionário' })
+  @IsOptional()
+  @IsEnum(Sector)
+  sector?: Sector;
 
   @ApiPropertyOptional({ example: 'uuid-da-loja' })
   @IsOptional()

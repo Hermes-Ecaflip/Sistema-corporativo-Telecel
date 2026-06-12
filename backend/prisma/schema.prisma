@@ -261,6 +261,7 @@ model Store {
   name        String   @db.VarChar(200)
   code        String   @db.VarChar(20)      // Código interno da loja
   brand       StoreBrand                       // Marca: TIM, MOTOROLA ou SAMSUNG
+  sectors     Sector[]                         // Setores que a loja opera (Vendas, Estoque, RH...)
 
   // Endereço
   zipCode     String?  @map("zip_code") @db.VarChar(9)

@@ -34,6 +34,7 @@ const SAFE_USER_SELECT = {
   phone: true,
   cpf: true,
   role: true,
+  sector: true,
   status: true,
   companyId: true,
   storeId: true,
@@ -44,7 +45,7 @@ const SAFE_USER_SELECT = {
   birthDate: true,
   createdAt: true,
   updatedAt: true,
-  store: { select: { id: true, name: true, code: true } },
+  store: { select: { id: true, name: true, code: true, brand: true } },
 } satisfies Prisma.UserSelect;
 
 @Injectable()

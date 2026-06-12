@@ -43,6 +43,9 @@
         </div>
       </div>
     </div>
+
+    <!-- Modal de edição -->
+    <div class="modal-overlay" id="modalOverlay"></div>
   </div>
 
   <script src="assets/js/shell.js"></script>
@@ -54,41 +57,118 @@
     btnNew.addEventListener('click', function () { window.location.href = 'cadastro-usuario.html'; });
 
     const users = [
-      { name: 'Admin', email: 'admin@telecel.com.br', role: 'Administrador', store: 'TIM Planaltina — DF', brand: 'TIM', status: 'Ativo', last: '20/05/2025 14:32' },
-      { name: 'Supervisor', email: 'supervisor@telecel.com.br', role: 'Supervisor', store: 'TIM JK Shopping — DF', brand: 'TIM', status: 'Ativo', last: '20/05/2025 14:30' },
-      { name: 'Vendedor', email: 'vendedor@telecel.com.br', role: 'Vendedor', store: 'TIM Planaltina — DF', brand: 'TIM', status: 'Ativo', last: '20/05/2025 14:25' },
-      { name: 'Financeiro', email: 'financeiro@telecel.com.br', role: 'Financeiro', store: 'Motorola Paulista — SP', brand: 'MOTOROLA', status: 'Ativo', last: '20/05/2025 14:20' },
-      { name: 'Auditor', email: 'auditor@telecel.com.br', role: 'Auditor', store: 'Samsung BH Shopping — MG', brand: 'SAMSUNG', status: 'Ativo', last: '20/05/2025 14:15' },
+      { name: 'Admin', email: 'admin@telecel.com.br', role: 'ADMIN', sector: 'GERENCIA', store: 'TIM-PLAN-DF', status: 'Ativo', last: '20/05/2026 14:32' },
+      { name: 'Carlos Gerente', email: 'gerente@telecel.com.br', role: 'GERENTE', sector: 'GERENCIA', store: 'TIM-PLAN-DF', status: 'Ativo', last: '20/05/2026 14:31' },
+      { name: 'Paulo Supervisor', email: 'supervisor@telecel.com.br', role: 'SUPERVISOR', sector: 'VENDAS', store: 'TIM-JK-DF', status: 'Ativo', last: '20/05/2026 14:30' },
+      { name: 'Vanessa Vendedora', email: 'vendedor@telecel.com.br', role: 'VENDEDOR', sector: 'VENDAS', store: 'TIM-PLAN-DF', status: 'Ativo', last: '20/05/2026 14:25' },
+      { name: 'Rafael Estoquista', email: 'estoque@telecel.com.br', role: 'ESTOQUISTA', sector: 'ESTOQUE', store: 'TIM-PLAN-DF', status: 'Ativo', last: '20/05/2026 14:22' },
+      { name: 'Juliana RH', email: 'rh@telecel.com.br', role: 'RH', sector: 'RH', store: 'MOTO-SP-001', status: 'Ativo', last: '20/05/2026 14:20' },
+      { name: 'Fernando Financeiro', email: 'financeiro@telecel.com.br', role: 'FINANCEIRO', sector: 'FINANCEIRO', store: 'MOTO-SP-001', status: 'Ativo', last: '20/05/2026 14:18' },
+      { name: 'Auditoria Interna', email: 'auditor@telecel.com.br', role: 'AUDITOR', sector: 'GERENCIA', store: 'SAM-MG-001', status: 'Ativo', last: '20/05/2026 14:15' },
     ];
 
+    // Lojas (código → nome + marca)
+    const STORES = {
+      'TIM-PLAN-DF': { name: 'TIM Planaltina — DF', brand: 'TIM' },
+      'TIM-JK-DF': { name: 'TIM JK Shopping — DF', brand: 'TIM' },
+      'TIM-CRB-MS': { name: 'TIM Corumbá — MS', brand: 'TIM' },
+      'MOTO-SP-001': { name: 'Motorola Paulista — SP', brand: 'MOTOROLA' },
+      'MOTO-RJ-001': { name: 'Motorola Barra — RJ', brand: 'MOTOROLA' },
+      'SAM-MG-001': { name: 'Samsung BH Shopping — MG', brand: 'SAMSUNG' },
+      'SAM-DF-001': { name: 'Samsung Brasília — DF', brand: 'SAMSUNG' },
+    };
     const brandBadge = { 'TIM': 'badge-blue', 'MOTOROLA': 'badge-amber', 'SAMSUNG': 'badge-gray' };
-
+    const roleLabel = { ADMIN:'Administrador', GERENTE:'Gerente', SUPERVISOR:'Supervisor', VENDEDOR:'Vendedor', ESTOQUISTA:'Estoquista', RH:'RH', FINANCEIRO:'Financeiro', AUDITOR:'Auditor' };
+    const sectorLabel = { VENDAS:'Vendas', ESTOQUE:'Estoque', RH:'RH', FINANCEIRO:'Financeiro', GERENCIA:'Gerência' };
     const roleBadge = {
-      'Administrador': 'badge-red', 'Supervisor': 'badge-blue',
-      'Vendedor': 'badge-green', 'Financeiro': 'badge-amber', 'Auditor': 'badge-gray',
+      ADMIN: 'badge-red', GERENTE: 'badge-blue', SUPERVISOR: 'badge-blue',
+      VENDEDOR: 'badge-green', ESTOQUISTA: 'badge-amber', RH: 'badge-gray',
+      FINANCEIRO: 'badge-amber', AUDITOR: 'badge-gray',
     };
 
-    document.getElementById('rows').innerHTML = users.map(u => `
-      <tr>
-        <td><div style="display:flex;align-items:center;gap:10px">
-          <div class="rank-av">${u.name.slice(0,2).toUpperCase()}</div>
-          <span class="cell-strong">${u.name}</span>
-        </div></td>
-        <td class="cell-muted">${u.email}</td>
-        <td><span class="badge ${roleBadge[u.role]||'badge-gray'}">${u.role}</span></td>
-        <td class="cell-muted">
-          <span class="badge ${brandBadge[u.brand]||'badge-gray'}" style="margin-right:6px">${u.brand}</span>
-          ${u.store}
-        </td>
-        <td><span class="badge badge-green">${u.status}</span></td>
-        <td class="cell-muted">${u.last}</td>
-        <td>
-          <div class="row-actions">
-            <button class="act" title="Editar">${tcIcon('edit')}</button>
-            <button class="act" title="Mais">${tcIcon('more')}</button>
-          </div>
-        </td>
-      </tr>`).join('');
+    function renderUsers() {
+      document.getElementById('rows').innerHTML = users.map((u, idx) => {
+        var st = STORES[u.store] || { name: u.store, brand: '' };
+        return `
+        <tr>
+          <td><div style="display:flex;align-items:center;gap:10px">
+            <div class="rank-av">${u.name.slice(0,2).toUpperCase()}</div>
+            <span class="cell-strong">${u.name}</span>
+          </div></td>
+          <td class="cell-muted">${u.email}</td>
+          <td><span class="badge ${roleBadge[u.role]||'badge-gray'}">${roleLabel[u.role]||u.role}</span></td>
+          <td class="cell-muted">
+            ${st.brand ? '<span class="badge '+(brandBadge[st.brand]||'badge-gray')+'" style="margin-right:6px">'+st.brand+'</span>' : ''}
+            ${st.name}
+          </td>
+          <td><span class="badge ${u.status==='Ativo'?'badge-green':'badge-gray'}">${u.status}</span></td>
+          <td class="cell-muted">${u.last}</td>
+          <td>
+            <div class="row-actions">
+              <button class="act" title="Editar" data-edit="${idx}">${tcIcon('edit')}</button>
+              <button class="act" title="${u.status==='Ativo'?'Suspender':'Ativar'}" data-toggle="${idx}">${tcIcon('more')}</button>
+            </div>
+          </td>
+        </tr>`;
+      }).join('');
+    }
+    renderUsers();
+
+    // ════════════════ EDIÇÃO DE FUNCIONÁRIO ════════════════
+    var overlay = document.getElementById('modalOverlay');
+    function closeModal() { overlay.classList.remove('show'); overlay.innerHTML = ''; }
+    overlay.addEventListener('click', function (e) { if (e.target === overlay) closeModal(); });
+
+    function storeOptions(selected) {
+      var groups = { TIM: [], MOTOROLA: [], SAMSUNG: [] };
+      Object.keys(STORES).forEach(function (code) {
+        var s = STORES[code];
+        var sel = code === selected ? ' selected' : '';
+        groups[s.brand].push('<option value="' + code + '"' + sel + '>' + s.name + '</option>');
+      });
+      return Object.keys(groups).map(function (b) { return '<optgroup label="' + b + '">' + groups[b].join('') + '</optgroup>'; }).join('');
+    }
+    function selOptions(map, selected) {
+      return Object.keys(map).map(function (k) { return '<option value="' + k + '"' + (k === selected ? ' selected' : '') + '>' + map[k] + '</option>'; }).join('');
+    }
+
+    document.addEventListener('click', function (e) {
+      var be = e.target.closest('[data-edit]');
+      var bt = e.target.closest('[data-toggle]');
+      if (be) openEdit(+be.dataset.edit);
+      if (bt) {
+        var u = users[+bt.dataset.toggle];
+        u.status = u.status === 'Ativo' ? 'Suspenso' : 'Ativo';
+        renderUsers();
+        (window.tcToast||alert)(u.name + ' agora está ' + u.status + '.', 'success');
+      }
+    });
+
+    function openEdit(idx) {
+      var u = users[idx];
+      overlay.innerHTML = '<div class="modal">' +
+        '<h3>Editar Funcionário</h3>' +
+        '<p class="hint">' + u.name + ' — ' + u.email + '</p>' +
+        '<div class="form-grid">' +
+          '<label class="full">Loja *<select id="e-store">' + storeOptions(u.store) + '</select></label>' +
+          '<label>Setor *<select id="e-sector">' + selOptions(sectorLabel, u.sector) + '</select></label>' +
+          '<label>Cargo *<select id="e-role">' + selOptions(roleLabel, u.role) + '</select></label>' +
+          '<label class="full">Status<select id="e-status"><option value="Ativo"' + (u.status==='Ativo'?' selected':'') + '>Ativo</option><option value="Suspenso"' + (u.status==='Suspenso'?' selected':'') + '>Suspenso</option></select></label>' +
+        '</div>' +
+        '<div class="form-actions"><button class="btn" id="e-cancel">Cancelar</button><button class="btn btn-primary" id="e-save">Salvar alterações</button></div>' +
+      '</div>';
+      overlay.classList.add('show');
+      document.getElementById('e-cancel').addEventListener('click', closeModal);
+      document.getElementById('e-save').addEventListener('click', function () {
+        u.store = document.getElementById('e-store').value;
+        u.sector = document.getElementById('e-sector').value;
+        u.role = document.getElementById('e-role').value;
+        u.status = document.getElementById('e-status').value;
+        // No sistema real: PATCH /api/v1/users/:id { storeId, sector, role, status }
+        closeModal(); renderUsers();
+        (window.tcToast||alert)('Dados de ' + u.name + ' atualizados (loja, setor e cargo).', 'success');
+      });
+    }
   </script>
 </body>
 </html>

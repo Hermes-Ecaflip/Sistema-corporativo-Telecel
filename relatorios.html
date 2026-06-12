@@ -13,7 +13,7 @@
     <div class="page-head">
       <div>
         <h1>Relatórios</h1>
-        <p>Gere e exporte relatórios do sistema em PDF, Excel ou CSV.</p>
+        <p>Gere e exporte relatórios do sistema em PDF, Excel ou JPG.</p>
       </div>
     </div>
 
@@ -55,7 +55,7 @@
         '<div class="report-actions">' +
           '<button class="btn btn-sm" data-type="' + r.id + '" data-fmt="PDF">PDF</button>' +
           '<button class="btn btn-sm" data-type="' + r.id + '" data-fmt="EXCEL">Excel</button>' +
-          '<button class="btn btn-sm" data-type="' + r.id + '" data-fmt="CSV">CSV</button>' +
+          '<button class="btn btn-sm" data-type="' + r.id + '" data-fmt="JPG">JPG</button>' +
         '</div>' +
       '</div>';
     }).join('');
@@ -65,7 +65,7 @@
       { name: 'Vendas - Maio 2025',      type: 'Vendas',     fmt: 'PDF',   by: 'admin@telecel.com.br',     date: '20/05/2025 14:32' },
       { name: 'Comissões - Abril 2025',  type: 'Comissões',  fmt: 'Excel', by: 'financeiro@telecel.com.br', date: '02/05/2025 09:10' },
       { name: 'Financeiro - Q1 2025',    type: 'Financeiro', fmt: 'PDF',   by: 'admin@telecel.com.br',     date: '01/04/2025 18:45' },
-      { name: 'Clientes - Base Completa',type: 'Clientes',   fmt: 'CSV',   by: 'supervisor@telecel.com.br', date: '28/03/2025 11:20' },
+      { name: 'Clientes - Base Completa',type: 'Clientes',   fmt: 'JPG',   by: 'supervisor@telecel.com.br', date: '28/03/2025 11:20' },
     ];
     document.getElementById('recentReports').innerHTML = recent.map(function (r) {
       return '<tr>' +

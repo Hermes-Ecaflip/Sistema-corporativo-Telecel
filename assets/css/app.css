@@ -462,14 +462,21 @@ tbody tr:hover { background: var(--bg); }
   font-weight: 500;
   pointer-events: none;
   white-space: nowrap;
+  max-width: 90%;
   box-shadow: 0 6px 20px rgba(0,0,0,.25);
   transition: opacity .15s;
   z-index: 20;
 }
 .chart-tooltip .tt-title { font-weight: 700; margin-bottom: 4px; font-size: 11px; opacity: .85; }
 .chart-tooltip .tt-row { display: flex; align-items: center; gap: 6px; line-height: 1.7; }
-.chart-tooltip .tt-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-.donut-tip { top: 50%; left: 50%; transform: translate(-50%, -50%); }
+.chart-tooltip .tt-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+/* Tooltip do donut: fica acima do centro, sem vazar */
+.donut-tip {
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 11.5px;
+  padding: 6px 10px;
+}
 .donut-center { transition: opacity .15s; }
 
 /* ─── Abas (tabs) ─── */
@@ -581,3 +588,69 @@ code { background: #f4f6f9; padding: 2px 6px; border-radius: 5px; font-size: 12.
   .topbar-search input { font-size: 13px; }
   .page-head p { font-size: 13px; }
 }
+
+/* ─── Correção: padding interno do conteúdo dos cards ─── */
+.card > .form-grid,
+.card > .form-actions,
+.card > .img-preview,
+.card > .hint,
+.card > p { padding-left: 22px; padding-right: 22px; }
+.card > .form-grid { padding-top: 18px; }
+.card > .form-actions { padding-bottom: 20px; }
+.card > .pref-row { padding-left: 22px; padding-right: 22px; }
+.card > .pref-row:first-of-type { padding-top: 8px; }
+.card > .pref-row:last-of-type { padding-bottom: 8px; }
+.card > .channel-row { padding-left: 22px; padding-right: 22px; }
+.card > .faq { padding-left: 22px; padding-right: 22px; }
+/* form que é filho direto do card */
+.card > form { display: block; padding: 0; }
+.card > form .form-grid { padding: 18px 22px 0; }
+.card > form .form-actions { padding: 0 22px 20px; }
+
+/* ─── Página de Lojas: cards ─── */
+.store-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 18px; }
+.store-card { background: #fff; border: 1px solid var(--line, #eef0f4); border-radius: 14px; padding: 20px; box-shadow: var(--shadow-card); }
+.store-card-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+.store-name { font-size: 16px; font-weight: 700; color: var(--ink, #1f2430); }
+.store-loc { font-size: 12.5px; color: var(--muted, #8b93a4); margin-top: 2px; }
+.store-sectors { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.sector-chip { background: #fff4ef; color: #d83e0a; font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 20px; }
+.store-stats { display: flex; justify-content: space-between; gap: 8px; padding: 14px 0; border-top: 1px solid var(--line, #eef0f4); border-bottom: 1px solid var(--line, #eef0f4); }
+.ss { display: flex; flex-direction: column; gap: 2px; }
+.ss-val { font-size: 14px; font-weight: 700; color: var(--ink, #1f2430); }
+.ss-lbl { font-size: 10.5px; color: var(--muted, #8b93a4); }
+.store-goal { padding: 14px 0; }
+.goal-top { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--muted, #8b93a4); margin-bottom: 6px; }
+.goal-bar { height: 8px; background: var(--line, #eef0f4); border-radius: 4px; overflow: hidden; }
+.goal-bar span { display: block; height: 100%; border-radius: 4px; transition: width .3s; }
+.goal-vals { font-size: 11.5px; color: var(--muted, #8b93a4); margin-top: 5px; }
+.store-actions { display: flex; gap: 8px; margin-top: 6px; }
+.store-actions .btn { flex: 1; justify-content: center; }
+
+/* ─── Monitoramento (modal) ─── */
+.mon-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin: 16px 0; }
+.mon-item { background: #f8f9fb; border-radius: 10px; padding: 14px; text-align: center; }
+.mon-val { display: block; font-size: 18px; font-weight: 700; color: var(--tc-orange, #ff5a1f); }
+.mon-lbl { font-size: 11.5px; color: var(--muted, #8b93a4); }
+.mon-section { font-size: 13.5px; color: var(--ink, #1f2430); padding: 8px 0; }
+
+/* ─── Bloco de campo com checkboxes (setores) ─── */
+.field-block { padding: 0 22px 18px; }
+.field-label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 10px; color: var(--ink, #1f2430); }
+.checkbox-row { display: flex; flex-wrap: wrap; gap: 16px; }
+.chk { display: flex; align-items: center; gap: 7px; font-size: 13.5px; cursor: pointer; }
+.chk input { width: 17px; height: 17px; accent-color: var(--tc-orange, #ff5a1f); }
+
+@media (max-width: 760px) {
+  .store-grid { grid-template-columns: 1fr; }
+  .mon-grid { grid-template-columns: 1fr; }
+}
+
+/* ─── Botão de exclusão e lista de detalhes ─── */
+.btn-danger { background: #cf222e; color: #fff; border: 1px solid #cf222e; }
+.btn-danger:hover { background: #a91723; border-color: #a91723; }
+.detail-list { margin: 8px 0 4px; }
+.detail-row { display: flex; justify-content: space-between; padding: 11px 0; border-bottom: 1px solid var(--line, #eef0f4); font-size: 14px; }
+.detail-row:last-child { border-bottom: none; }
+.detail-row span { color: var(--muted, #8b93a4); }
+.detail-row strong { color: var(--ink, #1f2430); }

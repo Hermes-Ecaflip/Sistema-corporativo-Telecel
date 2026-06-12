@@ -31,6 +31,7 @@ import { ReportsModule } from './reports/reports.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { StockModule } from './stock/stock.module';
+import { StoresModule } from './stores/stores.module';
 import { HealthModule } from './health/health.module';
 import { UploadsModule } from './uploads/uploads.module';
 import { AuditModule } from './audit/audit.module';
@@ -84,6 +85,7 @@ import { LoggerMiddleware } from './common/middleware/logger.middleware';
     NotificationsModule,
     DashboardModule,
     StockModule,
+    StoresModule,
     HealthModule,
     UploadsModule,
     AuditModule,

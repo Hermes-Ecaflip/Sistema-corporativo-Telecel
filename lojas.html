@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TELECEL — Lojas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/app.css" />
+</head>
+<body>
+  <div id="page">
+    <div class="page-head">
+      <div>
+        <h1>Lojas</h1>
+        <p>Monitore vendas, funcionários, estoque e metas de cada loja.</p>
+      </div>
+      <div class="head-actions">
+        <select class="select-filter" id="brandFilter" aria-label="Marca">
+          <option value="">Todas as marcas</option>
+          <option value="TIM">TIM</option>
+          <option value="MOTOROLA">Motorola</option>
+          <option value="SAMSUNG">Samsung</option>
+        </select>
+        <button class="btn btn-primary" id="btnNewStore"></button>
+      </div>
+    </div>
+
+    <!-- Cards de loja -->
+    <div class="store-grid" id="storeGrid"></div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="modalOverlay"></div>
+  </div>
+
+  <script src="assets/js/shell.js"></script>
+  <script>TC.mountShell('stores');</script>
+  <script>
+    var brandBadge = { TIM: 'badge-blue', MOTOROLA: 'badge-amber', SAMSUNG: 'badge-gray' };
+    var sectorLabel = { VENDAS:'Vendas', ESTOQUE:'Estoque', RH:'RH', FINANCEIRO:'Financeiro', GERENCIA:'Gerência' };
+    var monthNow = new Date().toISOString().slice(0,7);
+
+    // Dados demo (espelham o seed) — meta por loja, editável
+    var stores = [
+      { code:'TIM-PLAN-DF', name:'TIM Planaltina', brand:'TIM', city:'Planaltina', state:'DF', sectors:['VENDAS','ESTOQUE','GERENCIA'], employees:3, sales:42, revenue:128500, goal:150000 },
+      { code:'TIM-JK-DF', name:'TIM JK Shopping', brand:'TIM', city:'Brasília', state:'DF', sectors:['VENDAS'], employees:2, sales:38, revenue:142300, goal:140000 },
+      { code:'TIM-CRB-MS', name:'TIM Corumbá', brand:'TIM', city:'Corumbá', state:'MS', sectors:['VENDAS','ESTOQUE'], employees:2, sales:21, revenue:78900, goal:100000 },
+      { code:'MOTO-SP-001', name:'Motorola Paulista', brand:'MOTOROLA', city:'São Paulo', state:'SP', sectors:['VENDAS','ESTOQUE','RH'], employees:4, sales:55, revenue:210400, goal:200000 },
+      { code:'MOTO-RJ-001', name:'Motorola Barra', brand:'MOTOROLA', city:'Rio de Janeiro', state:'RJ', sectors:['VENDAS'], employees:2, sales:33, revenue:98700, goal:120000 },
+      { code:'SAM-MG-001', name:'Samsung BH Shopping', brand:'SAMSUNG', city:'Belo Horizonte', state:'MG', sectors:['VENDAS','ESTOQUE'], employees:3, sales:47, revenue:312000, goal:300000 },
+      { code:'SAM-DF-001', name:'Samsung Brasília', brand:'SAMSUNG', city:'Brasília', state:'DF', sectors:['VENDAS'], employees:2, sales:29, revenue:156000, goal:180000 },
+    ];
+    var brandFilter = '';
+
+    function brl(v) { return 'R$ ' + v.toLocaleString('pt-BR'); }
+
+    function render() {
+      var grid = document.getElementById('storeGrid');
+      grid.innerHTML = stores.filter(function (s) { return !brandFilter || s.brand === brandFilter; }).map(function (s) {
+        var pct = s.goal > 0 ? Math.min(100, Math.round(s.revenue / s.goal * 100)) : 0;
+        var pctColor = pct >= 100 ? '#137a3f' : pct >= 60 ? '#b7791f' : '#cf222e';
+        return '<div class="store-card">' +
+          '<div class="store-card-head">' +
+            '<div><div class="store-name">' + s.name + '</div>' +
+            '<div class="store-loc">' + s.city + ' — ' + s.state + '</div></div>' +
+            '<span class="badge ' + brandBadge[s.brand] + '">' + s.brand + '</span>' +
+          '</div>' +
+          '<div class="store-sectors">' + s.sectors.map(function (x) { return '<span class="sector-chip">' + sectorLabel[x] + '</span>'; }).join('') + '</div>' +
+          '<div class="store-stats">' +
+            '<div class="ss"><span class="ss-val">' + s.employees + '</span><span class="ss-lbl">Funcionários</span></div>' +
+            '<div class="ss"><span class="ss-val">' + s.sales + '</span><span class="ss-lbl">Vendas/mês</span></div>' +
+            '<div class="ss"><span class="ss-val">' + brl(s.revenue) + '</span><span class="ss-lbl">Faturamento</span></div>' +
+          '</div>' +
+          '<div class="store-goal">' +
+            '<div class="goal-top"><span>Meta do mês</span><span style="color:' + pctColor + '"><strong>' + pct + '%</strong></span></div>' +
+            '<div class="goal-bar"><span style="width:' + pct + '%;background:' + pctColor + '"></span></div>' +
+            '<div class="goal-vals">' + brl(s.revenue) + ' de ' + brl(s.goal) + '</div>' +
+          '</div>' +
+          '<div class="store-actions">' +
+            '<button class="btn btn-xs" data-monitor="' + s.code + '">Monitorar</button>' +
+            '<button class="btn btn-xs" data-goal="' + s.code + '">Editar meta</button>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    document.getElementById('btnNewStore').innerHTML = tcIcon('plus') + ' Nova Loja';
+    document.getElementById('btnNewStore').addEventListener('click', function () { window.location.href = 'criar-loja.html'; });
+    document.getElementById('brandFilter').addEventListener('change', function (e) { brandFilter = e.target.value; render(); });
+
+    // Modal helpers
+    var overlay = document.getElementById('modalOverlay');
+    function closeModal() { overlay.classList.remove('show'); overlay.innerHTML = ''; }
+    overlay.addEventListener('click', function (e) { if (e.target === overlay) closeModal(); });
+
+    document.addEventListener('click', function (e) {
+      var bm = e.target.closest('[data-monitor]');
+      var bg = e.target.closest('[data-goal]');
+      if (bm) openMonitor(bm.dataset.monitor);
+      if (bg) openGoal(bg.dataset.goal);
+    });
+
+    function openMonitor(code) {
+      var s = stores.find(function (x) { return x.code === code; });
+      var pct = s.goal > 0 ? Math.min(100, Math.round(s.revenue / s.goal * 100)) : 0;
+      overlay.innerHTML = '<div class="modal">' +
+        '<h3>Monitoramento — ' + s.name + '</h3>' +
+        '<p class="hint">Referência: ' + monthNow + '</p>' +
+        '<div class="mon-grid">' +
+          '<div class="mon-item"><span class="mon-val">' + s.employees + '</span><span class="mon-lbl">Funcionários</span></div>' +
+          '<div class="mon-item"><span class="mon-val">' + s.sales + '</span><span class="mon-lbl">Vendas no mês</span></div>' +
+          '<div class="mon-item"><span class="mon-val">' + brl(s.revenue) + '</span><span class="mon-lbl">Faturamento</span></div>' +
+          '<div class="mon-item"><span class="mon-val">' + pct + '%</span><span class="mon-lbl">Da meta</span></div>' +
+        '</div>' +
+        '<div class="mon-section"><strong>Setores ativos:</strong> ' + s.sectors.map(function (x) { return sectorLabel[x]; }).join(', ') + '</div>' +
+        '<div class="form-actions"><button class="btn btn-primary" id="mon-close">Fechar</button></div>' +
+      '</div>';
+      overlay.classList.add('show');
+      document.getElementById('mon-close').addEventListener('click', closeModal);
+    }
+
+    function openGoal(code) {
+      var s = stores.find(function (x) { return x.code === code; });
+      overlay.innerHTML = '<div class="modal">' +
+        '<h3>Editar Meta — ' + s.name + '</h3>' +
+        '<p class="hint">A meta é mensal e pode ser ajustada pelo administrador a cada mês.</p>' +
+        '<div class="form-grid">' +
+          '<label>Mês de referência<input id="g-month" type="month" value="' + monthNow + '" /></label>' +
+          '<label>Meta de faturamento (R$) *<input id="g-target" type="number" value="' + s.goal + '" min="0" /></label>' +
+        '</div>' +
+        '<div class="form-actions"><button class="btn" id="g-cancel">Cancelar</button><button class="btn btn-primary" id="g-save">Salvar meta</button></div>' +
+      '</div>';
+      overlay.classList.add('show');
+      document.getElementById('g-cancel').addEventListener('click', closeModal);
+      document.getElementById('g-save').addEventListener('click', function () {
+        var target = parseFloat(document.getElementById('g-target').value);
+        if (!target || target <= 0) { (window.tcToast||alert)('Informe uma meta válida.', 'error'); return; }
+        // No sistema real: POST/PATCH /api/v1/dashboard/goals { storeId, referenceMonth, targetValue }
+        s.goal = target;
+        closeModal(); render();
+        (window.tcToast||alert)('Meta da ' + s.name + ' atualizada para ' + brl(target) + '.', 'success');
+      });
+    }
+
+    render();
+  </script>
+</body>
+</html>

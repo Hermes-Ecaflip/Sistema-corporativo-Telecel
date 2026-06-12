@@ -20,6 +20,7 @@ const TC_LOGO = `
  * Ícones (Lucide-style, traçado)
  * ------------------------------------------------------------------------- */
 const ICONS = {
+  stores: '<path d="M3 21h18M3 7v14M21 7v14M6 21V11h4v10M14 21v-4h4v4M3 7l9-4 9 4M3 7h18"/>',
   stock: '<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>',
   dashboard: '<path d="M3 3h7v9H3zM14 3h7v5h-7zM14 12h7v9h-7zM3 16h7v5H3z"/>',
   clients: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
@@ -58,6 +59,7 @@ const NAV = [
   { id: 'financial',  label: 'Financeiro',   icon: 'financial',   href: 'financeiro.html' },
   { id: 'reports',    label: 'Relatórios',   icon: 'reports',     href: 'relatorios.html' },
   { id: 'users',      label: 'Usuários',     icon: 'users',       href: 'usuarios.html' },
+  { id: 'stores',     label: 'Lojas',        icon: 'stores',      href: 'lojas.html' },
   { id: 'approvals',  label: 'Aprovações',   icon: 'approvals',   href: 'vendas.html', badge: 12 },
   { id: 'audit',      label: 'Auditoria',    icon: 'audit',       href: 'auditoria.html' },
   { id: 'settings',   label: 'Configurações',icon: 'settings',    href: 'configuracoes.html' },

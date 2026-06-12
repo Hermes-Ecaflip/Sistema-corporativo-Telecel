@@ -94,31 +94,9 @@
         : '<span class="cell-muted">'+t+'</span>';
     }
 
-    document.getElementById('rows').innerHTML = clients.map(c => `
-      <tr>
-        <td class="cell-strong">${c.name}</td>
-        <td class="cell-muted">${c.doc}</td>
-        <td>${typeBadge(c.type)}</td>
-        <td>${c.city}</td>
-        <td>
-          <span class="score">
-            <span class="score-bar"><span style="width:${c.score/10}%;background:${scoreColor(c.score)}"></span></span>
-            <span class="score-num" style="color:${scoreColor(c.score)}">${c.score}</span>
-          </span>
-        </td>
-        <td>${statusBadge(c.status)}</td>
-        <td>
-          <div class="row-actions">
-            <button class="act" title="Ver">${tcIcon('eye')}</button>
-            <button class="act" title="Editar">${tcIcon('edit')}</button>
-            <button class="act" title="Mais">${tcIcon('more')}</button>
-          </div>
-        </td>
-      </tr>`).join('');
-
     // ════════════════ FORMULÁRIO DE NOVO CLIENTE ════════════════
     function renderRows() {
-      document.getElementById('rows').innerHTML = clients.map(c => `
+      document.getElementById('rows').innerHTML = clients.map((c, idx) => `
         <tr>
           <td class="cell-strong">${c.name}</td>
           <td class="cell-muted">${c.doc}</td>
@@ -133,9 +111,9 @@
           <td>${statusBadge(c.status)}</td>
           <td>
             <div class="row-actions">
-              <button class="act" title="Ver">${tcIcon('eye')}</button>
-              <button class="act" title="Editar">${tcIcon('edit')}</button>
-              <button class="act" title="Mais">${tcIcon('more')}</button>
+              <button class="act" title="Ver" data-view="${idx}">${tcIcon('eye')}</button>
+              <button class="act" title="Editar" data-edit="${idx}">${tcIcon('edit')}</button>
+              <button class="act" title="Excluir" data-del="${idx}">${tcIcon('more')}</button>
             </div>
           </td>
         </tr>`).join('');
@@ -144,6 +122,81 @@
     var overlay = document.getElementById('modalOverlay');
     function closeModal() { overlay.classList.remove('show'); overlay.innerHTML = ''; }
     overlay.addEventListener('click', function (e) { if (e.target === overlay) closeModal(); });
+
+    // ── Ações da linha: ver, editar, excluir ──
+    document.addEventListener('click', function (e) {
+      var bv = e.target.closest('[data-view]');
+      var be = e.target.closest('[data-edit]');
+      var bd = e.target.closest('[data-del]');
+      if (bv) openViewClient(+bv.dataset.view);
+      if (be) openEditClient(+be.dataset.edit);
+      if (bd) openDeleteClient(+bd.dataset.del);
+    });
+
+    function openViewClient(idx) {
+      var c = clients[idx];
+      overlay.innerHTML = '<div class="modal">' +
+        '<h3>Detalhes do Cliente</h3>' +
+        '<div class="detail-list">' +
+          '<div class="detail-row"><span>Nome</span><strong>' + c.name + '</strong></div>' +
+          '<div class="detail-row"><span>Documento</span><strong>' + c.doc + '</strong></div>' +
+          '<div class="detail-row"><span>Tipo</span><strong>' + c.type + '</strong></div>' +
+          '<div class="detail-row"><span>Cidade</span><strong>' + c.city + '</strong></div>' +
+          '<div class="detail-row"><span>Score</span><strong style="color:' + scoreColor(c.score) + '">' + c.score + '</strong></div>' +
+          '<div class="detail-row"><span>Status</span><strong>' + c.status + '</strong></div>' +
+        '</div>' +
+        '<div class="form-actions"><button class="btn btn-primary" id="v-close">Fechar</button></div>' +
+      '</div>';
+      overlay.classList.add('show');
+      document.getElementById('v-close').addEventListener('click', closeModal);
+    }
+
+    function openEditClient(idx) {
+      var c = clients[idx];
+      overlay.innerHTML = '<div class="modal">' +
+        '<h3>Editar Cliente</h3>' +
+        '<div class="form-grid">' +
+          '<label class="full">Nome / Razão Social *<input id="ec-name" value="' + c.name.replace(/"/g, '&quot;') + '" /></label>' +
+          '<label>Cidade<input id="ec-city" value="' + c.city.replace(/"/g, '&quot;') + '" /></label>' +
+          '<label>Status<select id="ec-status">' +
+            '<option' + (c.status==='Ativo'?' selected':'') + '>Ativo</option>' +
+            '<option' + (c.status==='Inativo'?' selected':'') + '>Inativo</option>' +
+            '<option' + (c.status==='Risco'?' selected':'') + '>Risco</option>' +
+          '</select></label>' +
+        '</div>' +
+        '<div class="form-actions"><button class="btn" id="ec-cancel">Cancelar</button><button class="btn btn-primary" id="ec-save">Salvar</button></div>' +
+      '</div>';
+      overlay.classList.add('show');
+      document.getElementById('ec-cancel').addEventListener('click', closeModal);
+      document.getElementById('ec-save').addEventListener('click', function () {
+        var name = document.getElementById('ec-name').value.trim();
+        if (!name) { (window.tcToast||alert)('Informe o nome.', 'error'); return; }
+        c.name = name;
+        c.city = document.getElementById('ec-city').value.trim() || '—';
+        c.status = document.getElementById('ec-status').value;
+        // No sistema real: PATCH /api/v1/clients/:id
+        closeModal(); renderRows();
+        (window.tcToast||alert)('Cliente "' + name + '" atualizado.', 'success');
+      });
+    }
+
+    function openDeleteClient(idx) {
+      var c = clients[idx];
+      overlay.innerHTML = '<div class="modal">' +
+        '<h3>Excluir Cliente</h3>' +
+        '<p style="font-size:14px;line-height:1.6;color:var(--ink,#1f2430)">Tem certeza que deseja excluir <strong>' + c.name + '</strong>? Esta ação não pode ser desfeita.</p>' +
+        '<div class="form-actions"><button class="btn" id="d-cancel">Cancelar</button><button class="btn btn-danger" id="d-confirm">Excluir</button></div>' +
+      '</div>';
+      overlay.classList.add('show');
+      document.getElementById('d-cancel').addEventListener('click', closeModal);
+      document.getElementById('d-confirm').addEventListener('click', function () {
+        var name = c.name;
+        clients.splice(idx, 1);
+        // No sistema real: DELETE /api/v1/clients/:id (soft delete)
+        closeModal(); renderRows();
+        (window.tcToast||alert)('Cliente "' + name + '" excluído.', 'success');
+      });
+    }
 
     // Validação de CPF (dígitos verificadores)
     function isValidCPF(cpf) {
@@ -221,6 +274,9 @@
         (window.tcToast||alert)('Cliente "' + name + '" cadastrado com sucesso.', 'success');
       });
     }
+
+    // Render inicial da tabela
+    renderRows();
   </script>
 </body>
 </html>

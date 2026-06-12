@@ -56,6 +56,7 @@ CREATE TABLE "stores" (
   "company_id" UUID NOT NULL REFERENCES "companies"("id"),
   "code"       VARCHAR(50) UNIQUE NOT NULL,
   "brand"      "StoreBrand" NOT NULL,
+  "sectors"    "Sector"[] DEFAULT ARRAY[]::"Sector"[],
   "name"       VARCHAR(200) NOT NULL,
   "city"       VARCHAR(100),
   "state"      VARCHAR(2),

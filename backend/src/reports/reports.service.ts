@@ -1,6 +1,6 @@
 // =============================================================================
 // TELECEL SYSTEM — reports/reports.service.ts
-// Geração de relatórios em PDF (PDFKit), Excel (ExcelJS) e CSV
+// Geração de relatórios em PDF (PDFKit), Excel (ExcelJS) e JPG (canvas)
 // =============================================================================
 
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
@@ -13,7 +13,6 @@ import {
 import { Prisma, SaleStatus } from '@prisma/client';
 import * as ExcelJS from 'exceljs';
 import PDFDocument from 'pdfkit';
-import { createObjectCsvStringifier } from 'csv-writer';
 
 export interface ReportResult {
   buffer: Buffer;
@@ -114,11 +113,11 @@ export class ReportsService {
           filename: `${baseName}.xlsx`,
           mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         };
-      case ReportFormat.CSV:
+      case ReportFormat.JPG:
         return {
-          buffer: this.buildCsv(meta, rows),
-          filename: `${baseName}.csv`,
-          mimeType: 'text/csv; charset=utf-8',
+          buffer: await this.buildJpg(meta, rows),
+          filename: `${baseName}.jpg`,
+          mimeType: 'image/jpeg',
         };
       default:
         throw new BadRequestException('Formato não suportado');
@@ -372,19 +371,98 @@ export class ReportsService {
 
   // ─── CSV ───────────────────────────────────────────────────────────────
 
-  private buildCsv(
+  /**
+   * Gera o relatório como imagem JPG (tabela renderizada em canvas).
+   * Útil para compartilhamento rápido (WhatsApp, etc.).
+   */
+  private async buildJpg(
     meta: { title: string; columns: any[] },
     rows: Record<string, any>[],
-  ): Buffer {
-    const csvStringifier = createObjectCsvStringifier({
-      header: meta.columns.map((col) => ({ id: col.key, title: col.header })),
+  ): Promise<Buffer> {
+    // Import dinâmico para não quebrar o boot caso o canvas não esteja instalado
+    const { createCanvas } = await import('canvas');
+
+    const ORANGE = '#ff5a1f';
+    const INK = '#1f2430';
+    const MUTED = '#8b93a4';
+    const LINE = '#e8eaee';
+
+    const padding = 40;
+    const rowH = 34;
+    const headerH = 90;
+    const colCount = meta.columns.length;
+    const width = Math.max(700, colCount * 170 + padding * 2);
+    const colW = (width - padding * 2) / colCount;
+    const maxRows = Math.min(rows.length, 50); // limite para imagem legível
+    const height = headerH + (maxRows + 1) * rowH + padding * 2;
+
+    const canvas = createCanvas(width, height);
+    const ctx = canvas.getContext('2d');
+
+    // Fundo
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, width, height);
+
+    // Cabeçalho — marca + título
+    ctx.fillStyle = ORANGE;
+    ctx.font = 'bold 24px sans-serif';
+    ctx.fillText('GRUPO TELECEL', padding, 40);
+    ctx.fillStyle = INK;
+    ctx.font = 'bold 18px sans-serif';
+    ctx.fillText(meta.title, padding, 68);
+    ctx.fillStyle = MUTED;
+    ctx.font = '12px sans-serif';
+    ctx.fillText(
+      `Gerado em ${new Date().toLocaleString('pt-BR')} · ${rows.length} registros`,
+      padding, 86,
+    );
+
+    // Linha separadora
+    ctx.strokeStyle = ORANGE;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(padding, headerH);
+    ctx.lineTo(width - padding, headerH);
+    ctx.stroke();
+
+    // Cabeçalho da tabela
+    let y = headerH + rowH;
+    ctx.fillStyle = INK;
+    ctx.font = 'bold 12px sans-serif';
+    meta.columns.forEach((col, i) => {
+      ctx.fillText(String(col.header).substring(0, 18), padding + i * colW, y - 10);
     });
+    ctx.strokeStyle = LINE;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(padding, y);
+    ctx.lineTo(width - padding, y);
+    ctx.stroke();
 
-    const content =
-      '\uFEFF' + // BOM para Excel reconhecer UTF-8
-      csvStringifier.getHeaderString() +
-      csvStringifier.stringifyRecords(rows);
+    // Linhas
+    ctx.font = '12px sans-serif';
+    for (let r = 0; r < maxRows; r++) {
+      y += rowH;
+      const row = rows[r];
+      if (r % 2 === 1) {
+        ctx.fillStyle = '#f8f9fb';
+        ctx.fillRect(padding, y - rowH + 8, width - padding * 2, rowH);
+      }
+      ctx.fillStyle = INK;
+      meta.columns.forEach((col, i) => {
+        const val = row[col.key];
+        const text = val === null || val === undefined ? '—' : String(val);
+        ctx.fillText(text.substring(0, 20), padding + i * colW, y - 10);
+      });
+    }
 
-    return Buffer.from(content, 'utf-8');
+    if (rows.length > maxRows) {
+      y += rowH;
+      ctx.fillStyle = MUTED;
+      ctx.font = 'italic 11px sans-serif';
+      ctx.fillText(`... e mais ${rows.length - maxRows} registros (use PDF/Excel para a lista completa)`, padding, y - 10);
+    }
+
+    return canvas.toBuffer('image/jpeg', { quality: 0.92 });
   }
 }

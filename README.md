@@ -23,8 +23,8 @@ Desenvolvido para o **Grupo TELECEL** — gestão integrada de varejo multimarca
 
 <br/>
 
-[![Backend](https://img.shields.io/badge/Backend-15%20Módulos%20✅-28a745?style=flat-square)]()
-[![Frontend](https://img.shields.io/badge/Frontend-13%20Telas%20✅-28a745?style=flat-square)]()
+[![Backend](https://img.shields.io/badge/Backend-16%20Módulos%20✅-28a745?style=flat-square)]()
+[![Frontend](https://img.shields.io/badge/Frontend-16%20Telas%20✅-28a745?style=flat-square)]()
 [![Database](https://img.shields.io/badge/Database-21%20Models%20%7C%2022%20Enums-4169E1?style=flat-square)]()
 [![API](https://img.shields.io/badge/API-85%2B%20Endpoints-FF5A1F?style=flat-square)]()
 
@@ -34,7 +34,7 @@ Desenvolvido para o **Grupo TELECEL** — gestão integrada de varejo multimarca
 
 ## 📋 Visão Geral
 
-O **TELECEL System** é uma plataforma corporativa completa desenvolvida para o Grupo TELECEL, que opera lojas de **três marcas** — **TIM, Motorola e Samsung** — espalhadas pelo Brasil. O sistema centraliza toda a operação comercial e permite **monitorar vendas e comissões por marca, por loja específica e por vendedor**, deixando sempre claro a qual marca e loja cada venda/vendedor pertence. Inclui cadastro de clientes com validação de CPF/CNPJ e score anti-fraude, gestão de vendas com workflow de aprovação, comissões automáticas, fechamento financeiro mensal e relatórios em PDF/Excel/CSV.
+O **TELECEL System** é uma plataforma corporativa completa desenvolvida para o Grupo TELECEL, que opera lojas de **três marcas** — **TIM, Motorola e Samsung** — espalhadas pelo Brasil. O sistema centraliza toda a operação comercial e permite **monitorar vendas e comissões por marca, por loja específica e por vendedor**, deixando sempre claro a qual marca e loja cada venda/vendedor pertence. Inclui cadastro de clientes com validação de CPF/CNPJ e score anti-fraude, gestão de vendas com workflow de aprovação, comissões automáticas, fechamento financeiro mensal e relatórios em PDF/Excel/JPG.
 
 A arquitetura é **multi-tenant**, com isolamento por empresa, RBAC com 5 papéis distintos e auditoria automática e imutável de todas as operações sensíveis.
 
@@ -460,7 +460,7 @@ Cada **loja** tem uma marca (`StoreBrand`: TIM · MOTOROLA · SAMSUNG), localiza
 <details>
 <summary><strong>📄 Relatórios · 📤 Uploads · 🔔 Notificações</strong></summary>
 
-**Relatórios** `POST /api/v1/reports/generate` — Gera PDF/Excel/CSV para: SALES, COMMISSIONS, FINANCIAL, CLIENTS, PRODUCTS
+**Relatórios** `POST /api/v1/reports/generate` — Gera PDF/Excel/JPG para: SALES, COMMISSIONS, FINANCIAL, CLIENTS, PRODUCTS
 
 **Uploads** `/api/v1/uploads` — Upload de documentos (PDF/imagem, max 10MB), presigned URLs para download seguro
 
@@ -487,12 +487,13 @@ Cada **loja** tem uma marca (`StoreBrand`: TIM · MOTOROLA · SAMSUNG), localiza
 | 7 | **Vendas** | Criação transacional · Comissão automática · Workflow aprovação |
 | 8 | **Comissões** | Aprovação/pagamento em lote · Fechamento mensal · Resumo por vendedor |
 | 9 | **Financeiro** | Fechamento consolidado · Balanço prévio · Movimentos manuais |
-| 10 | **Relatórios** | PDF (PDFKit) · Excel estilizado (ExcelJS) · CSV com BOM UTF-8 |
+| 10 | **Relatórios** | PDF (PDFKit) · Excel estilizado (ExcelJS) · JPG (canvas) |
 | 11 | **Notificações** | E-mail HTML (Nodemailer) · In-app · Templates transacionais |
 | 12 | **Dashboard** | KPIs por papel · Ranking · Tendência diária · Metas com progresso |
 | 13 | **Seeds & Migrations** | Dados iniciais · app.module.ts · Guia de migrations |
 | 14 | **Estoque** | Itens por IMEI/código de barras · Transferência entre lojas (mesma marca) com PDF assinado · Aparelhos danificados com upload de imagem e PDF |
 | 15 | **Health & Métricas** | `/health` com checagem de banco · `/api/v1/metrics` no formato Prometheus · Grafana provisionado |
+| 16 | **Lojas** | CRUD de lojas (marca, setores, endereço) · Monitoramento por loja (vendas, funcionários, estoque, meta do mês) |
 
 ### ✅ Frontend (9 telas)
 
@@ -509,9 +510,11 @@ Cada **loja** tem uma marca (`StoreBrand`: TIM · MOTOROLA · SAMSUNG), localiza
 | Usuários | `usuarios.html` | CRUD · Papéis · Status · Loja com marca |
 | Cadastrar Usuário | `cadastro-usuario.html` | Admin-only · Nome · Loja · Cargo · Setor |
 | Estoque | `estoque.html` | Itens (IMEI/código) · Transferências · Danificados |
-| Relatórios | `relatorios.html` | PDF/Excel/CSV por tipo |
+| Relatórios | `relatorios.html` | PDF/Excel/JPG por tipo |
 | Configurações | `configuracoes.html` | Empresa · Preferências · Segurança |
 | Suporte | `suporte.html` | Chamados · Canais · FAQ |
+| Lojas | `lojas.html` | Cards por loja · Monitoramento · Meta editável por mês |
+| Criar Loja | `criar-loja.html` | Admin-only · Marca · Setores · Endereço |
 
 ---
 
